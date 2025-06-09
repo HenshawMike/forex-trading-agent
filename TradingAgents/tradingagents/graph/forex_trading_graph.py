@@ -38,7 +38,7 @@ class PlaceholderMemory:
 
 class PlaceholderRiskTeam:
     def assess_trade(self, trade_proposal: Dict) -> Dict:
-        print(f"RiskTeam: Assessing trade {trade_proposal.get('pair')}")
+        # print(f"RiskTeam: Assessing trade {trade_proposal.get('pair')}") # Reduced verbosity
         return {"risk_score": 0.2, "assessment": "Low risk (placeholder)"}
 
 # Define the state for the Forex trading graph
@@ -65,10 +65,9 @@ class ForexTradingGraph:
         self.llm = llm # Should be a proper LLM instance
         self.broker_interface = broker_interface
 
-        # Initialize agents (using placeholders for memory, risk team for now)
         self.forex_master_agent = ForexMasterAgent(llm=self.llm, memory=PlaceholderMemory())
-        self.day_trader_agent = DayTraderAgent(agent_id="day_trader_eurusd_h1", llm=self.llm, memory=PlaceholderMemory(), broker_interface=self.broker_interface)
-        self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_gbpjpy_d1", llm=self.llm, memory=PlaceholderMemory(), broker_interface=self.broker_interface)
+        self.day_trader_agent = DayTraderAgent(agent_id="day_trader_main", llm=self.llm, memory=PlaceholderMemory(), broker_interface=self.broker_interface)
+        self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_main", llm=self.llm, memory=PlaceholderMemory(), broker_interface=self.broker_interface)
         self.trade_meta_agent = TradeMetaAgent(llm=self.llm, memory=PlaceholderMemory(), risk_management_team=PlaceholderRiskTeam())
 
         self.workflow = self._build_graph()
@@ -115,6 +114,7 @@ class ForexTradingGraph:
         strategic_directive = state.get("strategic_directive")
         if not strategic_directive:
             return {"error_message": "SwingTrader: Missing strategic directive."}
+        # For now, SwingTraderAgent has placeholder logic and might return empty list
         proposals = self.swing_trader_agent.analyze_and_propose_trades(strategic_directive)
         return {"swing_trader_proposals": proposals}
 
@@ -134,7 +134,7 @@ class ForexTradingGraph:
         print("--- Running Trade Meta Agent ---")
         proposals = state.get("aggregated_proposals", [])
         strategic_directive = state.get("strategic_directive")
-        portfolio_status = state.get("portfolio_status", {"balance": 10000, "open_positions": 0})
+        portfolio_status = state.get("portfolio_status", {"balance": 10000, "open_positions": 0, "max_concurrent_trades": 1, "risk_per_trade_percentage": 0.01}) # Added defaults here too
         if not strategic_directive:
             return {"error_message": "TradeMetaAgent: Missing strategic directive."}
         final_trades = self.trade_meta_agent.coordinate_trades(proposals, strategic_directive, portfolio_status)
@@ -170,7 +170,7 @@ if __name__ == "__main__":
         def get_account_info(self): return {"balance": 10000, "currency": "USD", "equity": 10000, "margin": 5000}
         def get_current_price(self, pair): return {"bid": 1.1, "ask": 1.1002, "time": datetime.now(timezone.utc)}
         def get_historical_data(self, pair, timeframe, start_date=None, end_date=None, count=None):
-            print(f"MockBroker: Getting historical data for {pair} ({timeframe})")
+            # print(f"MockBroker: Getting historical data for {pair} ({timeframe})") # Reduced verbosity
             return [{"time": datetime.now(timezone.utc), "open": 1.0, "high": 1.1, "low": 0.9, "close": 1.05, "volume": 100}]
         def place_order(self, order_details): return {"success": True, "order_id": "sim123", "message": "Simulated order placed."}
         def modify_order(self, order_id, new_params): return {"success": True, "message": "Simulated order modified."}
@@ -191,12 +191,20 @@ if __name__ == "__main__":
             "economic_events": ["US CPI next week"]
         },
         "user_preferences": {
-            "risk_appetite": "conservative",
-            "preferred_pairs": ["EUR/USD", "USD/JPY", "GBP/JPY"], # These will be used by DayTraderAgent
-            "trading_style_preference": "day_trader", # To make DayTraderAgent potentially more active
+            "risk_appetite": "aggressive", # Changed to test different path in MetaAgent
+            "preferred_pairs": ["EUR/USD", "USD/JPY", "GBP/JPY"],
+            "trading_style_preference": "day_trader",
             "disallowed_pairs": ["USD/CAD"]
         },
-        "portfolio_status": {"balance": 50000, "equity": 50000, "margin_available": 50000, "open_positions": []}
+        "portfolio_status": { # Updated this section
+            "balance": 25000,
+            "equity": 25000,
+            "margin_available": 25000,
+            "open_positions": [],
+            "max_concurrent_trades": 2,
+            "risk_per_trade_percentage": 0.01,
+            "mock_current_price": {"EUR/USD": 1.0850, "USD/JPY": 149.50, "GBP/JPY": 189.50} # For mock sizing
+        }
     }
 
     final_output_state = forex_graph_instance.run(initial_run_state)
@@ -240,3 +248,16 @@ if __name__ == "__main__":
         print("Swing Trader Proposals: [] (No trades proposed)")
     else:
         print("Swing Trader Proposals not found or not run in output.")
+
+    print("\n--- Specific check for Finalized Trades for Approval ---")
+    finalized_trades = final_output_state.get("finalized_trades_for_approval")
+    if finalized_trades:
+        print(f"Finalized Trades for Approval ({len(finalized_trades)}):")
+        for trade_idx, trade in enumerate(finalized_trades):
+            print(f"  Trade {trade_idx + 1}:")
+            for k, v in trade.items():
+                print(f"    {k}: {v}")
+    elif finalized_trades == []:
+        print("Finalized Trades for Approval: [] (No trades finalized)")
+    else:
+        print("Finalized Trades for Approval not found in output.")
