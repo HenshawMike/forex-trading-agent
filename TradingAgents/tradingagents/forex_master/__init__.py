@@ -1,0 +1,1 @@
+from .forex_master_agent import ForexMasterAgent

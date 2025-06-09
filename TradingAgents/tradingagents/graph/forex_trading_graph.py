@@ -1,0 +1,248 @@
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, List, Dict, Any, Optional
+
+# Assuming these will be imported from your existing structure or similar
+# from tradingagents.agents.utils.memory import FinancialSituationMemory # Example
+# from langchain_core.language_models.base import BaseLanguageModel # Example
+
+# Import new Forex agent skeletons
+from tradingagents.forex_master.forex_master_agent import ForexMasterAgent
+from tradingagents.forex_meta.trade_meta_agent import TradeMetaAgent
+from tradingagents.forex_agents.day_trader_agent import DayTraderAgent
+from tradingagents.forex_agents.swing_trader_agent import SwingTraderAgent
+from tradingagents.broker_interface.base import BrokerInterface
+# from tradingagents.broker_interface.mt5_broker import MT5Broker # Example concrete broker
+
+# Define a placeholder for the LLM and Memory and Broker (these would be initialized and passed in)
+# In a real setup, these would be properly initialized instances
+class PlaceholderLLM:
+    def invoke(self, prompt: str) -> str:
+        # Simulate LLM behavior for different agent calls based on prompt content
+        if "ForexMasterAgent" in prompt: # A bit of a hack for diverse dummy output
+            return f"LLM invoked for MasterAgent: {prompt[:50]}... Directive: Bullish EUR/USD"
+        elif "DayTraderAgent" in prompt:
+            return f"LLM invoked for DayTrader: {prompt[:50]}... Proposal: Buy EUR/USD"
+        elif "SwingTraderAgent" in prompt:
+            return f"LLM invoked for SwingTrader: {prompt[:50]}... Proposal: Sell GBP/JPY"
+        elif "TradeMetaAgent" in prompt:
+            return f"LLM invoked for MetaAgent: {prompt[:50]}... Finalizing trade"
+        return f"LLM invoked with: {prompt[:50]}..."
+
+
+class PlaceholderMemory:
+    def retrieve(self, query: str) -> List[str]:
+        return [f"Memory retrieved for: {query}"]
+    def add_memory(self, text: str, metadata: Optional[Dict] = None) -> None:
+        print(f"Memory: Added '{text[:50]}...' with metadata {metadata}")
+
+
+class PlaceholderRiskTeam:
+    def assess_trade(self, trade_proposal: Dict) -> Dict:
+        print(f"RiskTeam: Assessing trade {trade_proposal.get('pair')}")
+        return {"risk_score": 0.2, "assessment": "Low risk (placeholder)"}
+
+# Define the state for the Forex trading graph
+class ForexGraphState(TypedDict):
+    market_outlook: Optional[Dict[str, Any]] # From existing Analyst/Research graph
+    user_preferences: Optional[Dict[str, Any]]
+    strategic_directive: Optional[Dict[str, Any]]
+
+    # Each sub-agent might produce a list of proposals
+    day_trader_proposals: Optional[List[Dict[str, Any]]]
+    swing_trader_proposals: Optional[List[Dict[str, Any]]]
+    # scalper_proposals: Optional[List[Dict[str, Any]]] # For future
+    # position_trader_proposals: Optional[List[Dict[str, Any]]] # For future
+
+    aggregated_proposals: List[Dict[str, Any]] # All proposals before meta-agent processing
+
+    finalized_trades_for_approval: Optional[List[Dict[str, Any]]] # Output from TradeMetaAgent
+    portfolio_status: Optional[Dict[str, Any]] # From broker
+    error_message: Optional[str]
+
+
+class ForexTradingGraph:
+    def __init__(self, llm: Any, broker_interface: BrokerInterface):
+        self.llm = llm # Should be a proper LLM instance
+        self.broker_interface = broker_interface
+
+        # Initialize agents (using placeholders for memory, risk team for now)
+        # In a full setup, memory and risk team would be properly instantiated
+        self.forex_master_agent = ForexMasterAgent(llm=self.llm, memory=PlaceholderMemory())
+
+        # Specific IDs for agents could be useful for tracking/logging
+        self.day_trader_agent = DayTraderAgent(agent_id="day_trader_eurusd_h1", llm=self.llm, memory=PlaceholderMemory(), broker_interface=self.broker_interface)
+        self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_gbpjpy_d1", llm=self.llm, memory=PlaceholderMemory(), broker_interface=self.broker_interface)
+
+        self.trade_meta_agent = TradeMetaAgent(llm=self.llm, memory=PlaceholderMemory(), risk_management_team=PlaceholderRiskTeam())
+
+        self.workflow = self._build_graph()
+
+    def _build_graph(self) -> StateGraph:
+        graph = StateGraph(ForexGraphState)
+
+        # Define nodes
+        graph.add_node("run_forex_master_agent", self.run_forex_master_agent)
+        graph.add_node("run_day_trader_agent", self.run_day_trader_agent)
+        graph.add_node("run_swing_trader_agent", self.run_swing_trader_agent)
+        graph.add_node("aggregate_trading_proposals", self.aggregate_trading_proposals)
+        graph.add_node("run_trade_meta_agent", self.run_trade_meta_agent)
+
+        # Define edges (conceptual linear flow for this skeleton)
+        graph.set_entry_point("run_forex_master_agent")
+
+        # ForexMasterAgent runs, then branches to parallel trading style agents
+        graph.add_edge("run_forex_master_agent", "run_day_trader_agent")
+        graph.add_edge("run_forex_master_agent", "run_swing_trader_agent")
+
+        # After trading style agents, aggregate their proposals.
+        # This is a simplified join. For true parallel execution and join,
+        # LangGraph offers patterns like adding multiple edges to a collecting node
+        # or using conditional edges based on completion of parallel branches.
+        # Here, we rely on the implicit assumption that aggregate_trading_proposals
+        # will be called after both run_day_trader_agent and run_swing_trader_agent
+        # have contributed their parts to the state. In a compiled graph, if these
+        # are truly parallel, aggregate_trading_proposals might run with partial data
+        # unless more sophisticated joining logic is implemented.
+        # For this sketch, we'll assume a conceptual join before aggregation.
+        # A common pattern for joins is to have a "collector" node that checks
+        # if all inputs are ready.
+        # For now, we add edges to the aggregator. If one path is faster, it might
+        # update the state, and the aggregator will run. Then the second path finishes,
+        # updates state, and the aggregator runs again. This is acceptable for a sketch.
+
+        # A more robust join:
+        # 1. Create a "join_node"
+        # 2. Edges: run_day_trader_agent -> join_node, run_swing_trader_agent -> join_node
+        # 3. Conditional edge from join_node to aggregate_trading_proposals that only proceeds
+        #    if state.day_trader_proposals is not None AND state.swing_trader_proposals is not None.
+        # For this skeleton, we'll keep it simpler and demonstrate the nodes.
+        graph.add_edge("run_day_trader_agent", "aggregate_trading_proposals")
+        graph.add_edge("run_swing_trader_agent", "aggregate_trading_proposals")
+
+
+        graph.add_edge("aggregate_trading_proposals", "run_trade_meta_agent")
+        graph.add_edge("run_trade_meta_agent", END)
+
+        return graph.compile()
+
+    def run_forex_master_agent(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("--- Running Forex Master Agent ---")
+        market_outlook = state.get("market_outlook", {"summary": "Default neutral market outlook."})
+        user_preferences = state.get("user_preferences", {"risk_appetite": "moderate"})
+
+        directive = self.forex_master_agent.get_strategic_directive(market_outlook, user_preferences)
+        return {"strategic_directive": directive}
+
+    def run_day_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("--- Running Day Trader Agent ---")
+        strategic_directive = state.get("strategic_directive")
+        if not strategic_directive:
+            return {"error_message": "DayTrader: Missing strategic directive."}
+
+        proposals = self.day_trader_agent.analyze_and_propose_trades(strategic_directive)
+        return {"day_trader_proposals": proposals}
+
+    def run_swing_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("--- Running Swing Trader Agent ---")
+        strategic_directive = state.get("strategic_directive")
+        if not strategic_directive:
+            return {"error_message": "SwingTrader: Missing strategic directive."}
+
+        proposals = self.swing_trader_agent.analyze_and_propose_trades(strategic_directive)
+        return {"swing_trader_proposals": proposals}
+
+    def aggregate_trading_proposals(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("--- Aggregating Trading Proposals ---")
+        all_proposals = []
+        # Ensure proposals are lists before extending
+        day_proposals = state.get("day_trader_proposals")
+        if day_proposals is not None: # Check if the key exists and is not None
+             all_proposals.extend(day_proposals)
+
+        swing_proposals = state.get("swing_trader_proposals")
+        if swing_proposals is not None: # Check if the key exists and is not None
+            all_proposals.extend(swing_proposals)
+
+        print(f"Total proposals aggregated: {len(all_proposals)}")
+        # Always return the key, even if empty, to ensure state consistency
+        return {"aggregated_proposals": all_proposals}
+
+
+    def run_trade_meta_agent(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("--- Running Trade Meta Agent ---")
+        proposals = state.get("aggregated_proposals", [])
+        strategic_directive = state.get("strategic_directive")
+        portfolio_status = state.get("portfolio_status", {"balance": 10000, "open_positions": 0})
+
+        if not strategic_directive:
+            return {"error_message": "TradeMetaAgent: Missing strategic directive."}
+
+        final_trades = self.trade_meta_agent.coordinate_trades(proposals, strategic_directive, portfolio_status)
+        return {"finalized_trades_for_approval": final_trades}
+
+    def run(self, initial_state: Dict[str, Any]) -> Dict[str, Any]:
+        print("--- Running Forex Trading Graph ---")
+        graph_input = ForexGraphState(
+            market_outlook=initial_state.get("market_outlook"),
+            user_preferences=initial_state.get("user_preferences"),
+            strategic_directive=None, # Will be set by master agent
+            day_trader_proposals=None, # Initialize as None
+            swing_trader_proposals=None, # Initialize as None
+            aggregated_proposals=[], # Initialize as empty list
+            finalized_trades_for_approval=None, # Initialize as None
+            portfolio_status=initial_state.get("portfolio_status"),
+            error_message=None
+        )
+        # LangGraph's invoke method expects a dictionary that matches the state definition.
+        # If some keys are truly optional and might not be present even after node execution,
+        # they should be marked as NotRequired (Python 3.11+) or handled carefully in each node.
+        # For this TypedDict, all keys are technically required to be present,
+        # hence initializing them to None or default empty values.
+
+        final_state_dict: Dict[str, Any] = {}
+        for s in self.workflow.stream(graph_input):
+            final_state_dict.update(s) # Accumulate state from all nodes that ran
+            # The stream method yields the state *after* each node executes.
+            # We are interested in the final accumulated state.
+            # Note: In more complex graphs with cycles or multiple END points,
+            # you might want to inspect 's' more closely or get the state
+            # from the last relevant node.
+
+        print("--- Forex Trading Graph Run Complete ---")
+        return final_state_dict
+
+
+if __name__ == "__main__":
+    from datetime import datetime # Add missing import for MockBroker
+
+    mock_llm = PlaceholderLLM()
+
+    class MockBroker(BrokerInterface):
+        def connect(self, credentials): return True
+        def disconnect(self): pass
+        def get_account_info(self): return {"balance": 10000, "currency": "USD", "equity": 10000, "margin": 5000}
+        def get_current_price(self, pair): return {"bid": 1.1, "ask": 1.1002, "time": datetime.now()}
+        def get_historical_data(self, pair, timeframe, start_date=None, end_date=None, count=None):
+            print(f"MockBroker: Getting historical data for {pair} ({timeframe})")
+            return [{"time": datetime.now(), "open": 1.0, "high": 1.1, "low": 0.9, "close": 1.05, "volume": 100}]
+        def place_order(self, order_details): return {"success": True, "order_id": "sim123", "message": "Simulated order placed."}
+        def modify_order(self, order_id, new_params): return {"success": True, "message": "Simulated order modified."}
+        def close_order(self, order_id, size_to_close=None): return {"success": True, "message": "Simulated order closed."}
+        def get_open_positions(self): return []
+        def get_pending_orders(self): return []
+
+    mock_broker = MockBroker()
+
+    forex_graph_instance = ForexTradingGraph(llm=mock_llm, broker_interface=mock_broker)
+
+    initial_run_state = {
+        "market_outlook": {"summary": "Slightly bullish sentiment for USD based on recent news.", "key_levels": {"EUR/USD_support": 1.0750}},
+        "user_preferences": {"risk_appetite": "cautious", "preferred_pairs": ["EUR/USD", "GBP/USD"]},
+        "portfolio_status": {"balance": 50000, "equity": 50000, "margin_available": 50000, "open_positions": []}
+    }
+
+    final_output = forex_graph_instance.run(initial_run_state)
+    print("\n--- Final Graph Output (Only Populated Keys) ---")
+    for key, value in final_output.items():
+        if value is not None and (not isinstance(value, list) or value): # Print if not None and not an empty list
+             print(f"{key}: {value}")
