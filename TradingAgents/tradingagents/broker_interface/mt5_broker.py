@@ -1,17 +1,31 @@
 from datetime import datetime, timezone # Added timezone
 from typing import Any, Dict, List, Optional, Union
 from .base import BrokerInterface
-import MetaTrader5 as mt5
+# import MetaTrader5 as mt5 # Original import
 import pandas as pd # Added pandas
 import numpy as np # Added numpy
+
+# Try to import MetaTrader5 and set it to None if it fails
+try:
+    import MetaTrader5 as mt5
+except ImportError:
+    mt5 = None
+    print("MT5Broker Warning: MetaTrader5 package not found. MT5Broker will not be functional.")
 
 class MT5Broker(BrokerInterface):
     def __init__(self):
         self._connected = False
         self.mt5_path = None
-        print("MT5Broker initialized. Not connected.")
+        if mt5 is None:
+            print("MT5Broker initialized, but MetaTrader5 package is NOT AVAILABLE.")
+        else:
+            print("MT5Broker initialized. Not connected.")
 
     def connect(self, credentials: Dict[str, Any]) -> bool:
+        if mt5 is None:
+            print("MT5Broker Error: MetaTrader5 package not available. Cannot connect.")
+            return False
+
         print(f"MT5Broker: Attempting to connect with login: {credentials.get('login')}")
         try:
             login_val = credentials.get('login')
@@ -65,14 +79,11 @@ class MT5Broker(BrokerInterface):
             print(f"MT5Broker: Connected and logged in successfully to account {login_int}.")
             return True
 
-        except ImportError:
-            print("MT5Broker: MetaTrader5 package not found. Please install it.")
-            self._connected = False
-            return False
-        except Exception as e:
+        except Exception as e: # Catch other potential errors during the process
             print(f"MT5Broker: An unexpected error occurred during connection: {e}")
             self._connected = False
-            if 'mt5' in globals() and hasattr(mt5, 'terminal_info') and mt5.terminal_info():
+            # Ensure shutdown if mt5 was partially initialized and an error occurred later
+            if hasattr(mt5, 'terminal_info') and mt5.terminal_info(): # Check if mt5 was initialized enough to have terminal_info
                  mt5.shutdown()
             return False
 
@@ -80,7 +91,7 @@ class MT5Broker(BrokerInterface):
         print("MT5Broker: disconnect() called.")
         try:
             if self._connected:
-                if 'mt5' in globals() and hasattr(mt5, 'shutdown'):
+                if mt5 and hasattr(mt5, 'shutdown'): # Check if mt5 is available and has shutdown
                     mt5.shutdown()
                     print("MT5Broker: Disconnected from MetaTrader 5.")
                 else:
@@ -93,8 +104,8 @@ class MT5Broker(BrokerInterface):
             self._connected = False
 
     def get_account_info(self) -> Optional[Dict[str, Any]]:
-        if not self._connected:
-            print("MT5Broker: Not connected. Call connect() first.")
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
             return None
         print("MT5Broker: get_account_info() called.")
         try:
@@ -109,8 +120,8 @@ class MT5Broker(BrokerInterface):
             return None
 
     def get_current_price(self, pair: str) -> Optional[Dict[str, float]]:
-        if not self._connected:
-            print("MT5Broker: Not connected.")
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
             return None
         print(f"MT5Broker: get_current_price() called for {pair}.")
         try:
@@ -132,8 +143,8 @@ class MT5Broker(BrokerInterface):
         end_date: Optional[Union[datetime, str]] = None,
         count: Optional[int] = None
     ) -> Optional[List[Dict[str, Any]]]:
-        if not self._connected:
-            print("MT5Broker: Not connected. Call connect() first.")
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
             return None
 
         timeframe_map = {
@@ -193,44 +204,43 @@ class MT5Broker(BrokerInterface):
             print(f"MT5Broker: Successfully retrieved {len(formatted_data)} bars for {pair} {timeframe}.")
             return formatted_data
 
-        except ImportError:
-            print("MT5Broker: MetaTrader5 package not found during data fetch. Ensure it's installed.")
-            return None
-        except Exception as e:
+        except Exception as e: # Catch other potential errors during MT5 calls
             print(f"MT5Broker: Error fetching historical data for {pair}, {timeframe}: {e}")
             return None
 
+
     def place_order(self, order_details: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        if not self._connected:
-            print("MT5Broker: Not connected.")
-            return {"success": False, "message": "Not connected"}
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
+            return {"success": False, "message": "Not connected or MT5 not available"}
         print(f"MT5Broker: place_order() called with {order_details}.")
+        # Actual implementation will follow in a later step
         return {"success": True, "order_id": "12345", "message": "Order placed (simulated)."}
 
     def modify_order(self, order_id: str, new_params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        if not self._connected:
-            print("MT5Broker: Not connected.")
-            return {"success": False, "message": "Not connected"}
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
+            return {"success": False, "message": "Not connected or MT5 not available"}
         print(f"MT5Broker: modify_order() called for order {order_id} with {new_params}.")
         return {"success": True, "message": "Order modified (simulated)."}
 
     def close_order(self, order_id: str, size_to_close: Optional[float] = None) -> Optional[Dict[str, Any]]:
-        if not self._connected:
-            print("MT5Broker: Not connected.")
-            return {"success": False, "message": "Not connected"}
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
+            return {"success": False, "message": "Not connected or MT5 not available"}
         print(f"MT5Broker: close_order() called for order {order_id}, size {size_to_close}.")
         return {"success": True, "message": "Order closed (simulated)."}
 
     def get_open_positions(self) -> Optional[List[Dict[str, Any]]]:
-        if not self._connected:
-            print("MT5Broker: Not connected.")
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
             return None
         print("MT5Broker: get_open_positions() called.")
         return [{"id": "123", "pair": "EUR/USD", "type": "buy", "side": "buy", "size": 0.01, "open_price": 1.0800, "sl": 1.0750, "tp": 1.0900, "profit": 5.20}]
 
     def get_pending_orders(self) -> Optional[List[Dict[str, Any]]]:
-        if not self._connected:
-            print("MT5Broker: Not connected.")
+        if not self._connected or mt5 is None:
+            print("MT5Broker: Not connected or MetaTrader5 package not available.")
             return None
         print("MT5Broker: get_pending_orders() called.")
         return []
