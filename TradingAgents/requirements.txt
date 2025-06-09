@@ -23,3 +23,5 @@ chainlit
 rich
 questionary
 MetaTrader5
+Flask
+Flask-CORS
