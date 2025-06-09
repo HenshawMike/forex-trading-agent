@@ -114,7 +114,6 @@ class ForexTradingGraph:
         strategic_directive = state.get("strategic_directive")
         if not strategic_directive:
             return {"error_message": "SwingTrader: Missing strategic directive."}
-        # For now, SwingTraderAgent has placeholder logic and might return empty list
         proposals = self.swing_trader_agent.analyze_and_propose_trades(strategic_directive)
         return {"swing_trader_proposals": proposals}
 
@@ -134,7 +133,7 @@ class ForexTradingGraph:
         print("--- Running Trade Meta Agent ---")
         proposals = state.get("aggregated_proposals", [])
         strategic_directive = state.get("strategic_directive")
-        portfolio_status = state.get("portfolio_status", {"balance": 10000, "open_positions": 0, "max_concurrent_trades": 1, "risk_per_trade_percentage": 0.01}) # Added defaults here too
+        portfolio_status = state.get("portfolio_status", {"balance": 10000, "open_positions": 0, "max_concurrent_trades": 1, "risk_per_trade_percentage": 0.01})
         if not strategic_directive:
             return {"error_message": "TradeMetaAgent: Missing strategic directive."}
         final_trades = self.trade_meta_agent.coordinate_trades(proposals, strategic_directive, portfolio_status)
@@ -185,25 +184,27 @@ if __name__ == "__main__":
     initial_run_state = {
         "market_outlook": {
             "summary": "Overall market is cautious. USD showed some strength on recent data.",
-            "sentiment": {"USD": "bullish", "EUR": "bearish", "AUD/JPY": "neutral"},
-            "volatility_forecast": "high",
+            # Ensure sentiment can trigger one of the agents, e.g. strong_bullish for USD
+            "sentiment": {"USD": "strong_bullish", "EUR": "neutral", "AUD/JPY": "neutral"},
+            "volatility_forecast": "moderate", # Changed from high to moderate
             "key_levels": {"EUR/USD_resistance": 1.0900, "USD/JPY_support": 148.50},
             "economic_events": ["US CPI next week"]
         },
         "user_preferences": {
-            "risk_appetite": "aggressive", # Changed to test different path in MetaAgent
+            "risk_appetite": "moderate", # Changed from conservative
             "preferred_pairs": ["EUR/USD", "USD/JPY", "GBP/JPY"],
-            "trading_style_preference": "day_trader",
+            # To specifically test SwingTrader, set this:
+            "trading_style_preference": "swing_trader",
             "disallowed_pairs": ["USD/CAD"]
         },
-        "portfolio_status": { # Updated this section
+        "portfolio_status": {
             "balance": 25000,
             "equity": 25000,
             "margin_available": 25000,
             "open_positions": [],
             "max_concurrent_trades": 2,
             "risk_per_trade_percentage": 0.01,
-            "mock_current_price": {"EUR/USD": 1.0850, "USD/JPY": 149.50, "GBP/JPY": 189.50} # For mock sizing
+            "mock_current_price": {"EUR/USD": 1.0850, "USD/JPY": 149.50, "GBP/JPY": 189.50}
         }
     }
 
