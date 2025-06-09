@@ -1,55 +1,51 @@
-import time
-import json
+from typing import Any, Dict, List, Optional
 
+# Placeholder for actual LLM
+# class PlaceholderLLM:
+#     def invoke(self, prompt: str) -> str:
+#         return f"LLM mock response to: {prompt[:100]}..."
 
-def create_neutral_debator(llm):
-    def neutral_node(state) -> dict:
-        risk_debate_state = state["risk_debate_state"]
-        history = risk_debate_state.get("history", "")
-        neutral_history = risk_debate_state.get("neutral_history", "")
+def create_neutral_debator(llm: Any): # llm is passed but not used in this mock version
+    """
+    Creates a node function for the Neutral Risk Analyst.
+    This analyst provides a balanced view, weighing pros and cons.
+    """
 
-        current_risky_response = risk_debate_state.get("current_risky_response", "")
-        current_safe_response = risk_debate_state.get("current_safe_response", "")
+    def analyze_trade_risk(
+        state: Dict[str, Any] # LangGraph state
+    ) -> Dict[str, Any]: # Returns a dictionary to update the state
+        """
+        Analyzes a specific trade proposal from a neutral perspective.
+        Expected in state:
+        - current_trade_proposal: Dict[str, Any]
+        - strategic_directive: Optional[Dict[str, Any]]
+        - portfolio_context: Optional[Dict[str, Any]] (not used in this mock)
+        """
+        trade_proposal = state.get("current_trade_proposal")
+        strategic_directive = state.get("strategic_directive", {})
+        # portfolio_context = state.get("portfolio_context", {})
 
-        market_research_report = state["market_report"]
-        sentiment_report = state["sentiment_report"]
-        news_report = state["news_report"]
-        fundamentals_report = state["fundamentals_report"]
+        if not trade_proposal:
+            print("NeutralRiskAnalyst: No trade proposal found in state.")
+            return {"neutral_analysis_result": "Error: No trade proposal provided."}
 
-        trader_decision = state["trader_investment_plan"]
+        print(f"NeutralRiskAnalyst received trade proposal for {trade_proposal.get('pair')}")
 
-        prompt = f"""As the Neutral Risk Analyst, your role is to provide a balanced perspective, weighing both the potential benefits and risks of the trader's decision or plan. You prioritize a well-rounded approach, evaluating the upsides and downsides while factoring in broader market trends, potential economic shifts, and diversification strategies.Here is the trader's decision:
+        # Mock analysis logic
+        pair = trade_proposal.get('pair', 'N/A')
+        # Example: Use a mock RSI value if it were passed or calculated by sub-agent and included in proposal
+        mock_rsi = trade_proposal.get('indicators', {}).get('RSI_14', 'N/A')
+        confidence = trade_proposal.get('confidence_score', 0)
 
-{trader_decision}
+        analysis_string = (
+            f"Neutral assessment for {pair}: The proposal shows a confidence of {confidence:.2f}. "
+            f"Directive alignment needs to be considered. If mock RSI is available: {mock_rsi}. "
+            f"The reward/risk ratio appears balanced based on provided SL/TP. "
+            f"Consider overall market conditions and upcoming news from directive ({strategic_directive.get('economic_events', 'none')})."
+        )
 
-Your task is to challenge both the Risky and Safe Analysts, pointing out where each perspective may be overly optimistic or overly cautious. Use insights from the following data sources to support a moderate, sustainable strategy to adjust the trader's decision:
+        print(f"NeutralRiskAnalyst generated analysis: {analysis_string}")
 
-Market Research Report: {market_research_report}
-Social Media Sentiment Report: {sentiment_report}
-Latest World Affairs Report: {news_report}
-Company Fundamentals Report: {fundamentals_report}
-Here is the current conversation history: {history} Here is the last response from the risky analyst: {current_risky_response} Here is the last response from the safe analyst: {current_safe_response}. If there are no responses from the other viewpoints, do not halluncinate and just present your point.
+        return {"neutral_analysis_output": analysis_string}
 
-Engage actively by analyzing both sides critically, addressing weaknesses in the risky and conservative arguments to advocate for a more balanced approach. Challenge each of their points to illustrate why a moderate risk strategy might offer the best of both worlds, providing growth potential while safeguarding against extreme volatility. Focus on debating rather than simply presenting data, aiming to show that a balanced view can lead to the most reliable outcomes. Output conversationally as if you are speaking without any special formatting."""
-
-        response = llm.invoke(prompt)
-
-        argument = f"Neutral Analyst: {response.content}"
-
-        new_risk_debate_state = {
-            "history": history + "\n" + argument,
-            "risky_history": risk_debate_state.get("risky_history", ""),
-            "safe_history": risk_debate_state.get("safe_history", ""),
-            "neutral_history": neutral_history + "\n" + argument,
-            "latest_speaker": "Neutral",
-            "current_risky_response": risk_debate_state.get(
-                "current_risky_response", ""
-            ),
-            "current_safe_response": risk_debate_state.get("current_safe_response", ""),
-            "current_neutral_response": argument,
-            "count": risk_debate_state["count"] + 1,
-        }
-
-        return {"risk_debate_state": new_risk_debate_state}
-
-    return neutral_node
+    return analyze_trade_risk

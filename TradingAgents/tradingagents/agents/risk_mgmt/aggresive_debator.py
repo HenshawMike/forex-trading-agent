@@ -1,55 +1,55 @@
-import time
-import json
+from typing import Any, Dict, List, Optional
 
+# Placeholder for actual LLM, assuming it's passed in and has an invoke method
+# class PlaceholderLLM:
+#     def invoke(self, prompt: str) -> str:
+#         return f"LLM mock response to: {prompt[:100]}..."
 
-def create_risky_debator(llm):
-    def risky_node(state) -> dict:
-        risk_debate_state = state["risk_debate_state"]
-        history = risk_debate_state.get("history", "")
-        risky_history = risk_debate_state.get("risky_history", "")
+def create_risky_debator(llm: Any): # llm is passed but not used in this mock version
+    """
+    Creates a node function for the Aggressive Risk Analyst.
+    This analyst focuses on potential upsides and downplays risks.
+    """
 
-        current_safe_response = risk_debate_state.get("current_safe_response", "")
-        current_neutral_response = risk_debate_state.get("current_neutral_response", "")
+    def analyze_trade_risk(
+        state: Dict[str, Any] # LangGraph state
+    ) -> Dict[str, Any]: # Returns a dictionary to update the state
+        """
+        Analyzes a specific trade proposal from an aggressive perspective.
+        Expected in state:
+        - current_trade_proposal: Dict[str, Any]
+        - strategic_directive: Optional[Dict[str, Any]]
+        - portfolio_context: Optional[Dict[str, Any]] (not used in this mock)
+        """
+        trade_proposal = state.get("current_trade_proposal")
+        strategic_directive = state.get("strategic_directive", {}) # Default to empty dict
+        # portfolio_context = state.get("portfolio_context", {}) # Not used in this mock
 
-        market_research_report = state["market_report"]
-        sentiment_report = state["sentiment_report"]
-        news_report = state["news_report"]
-        fundamentals_report = state["fundamentals_report"]
+        if not trade_proposal:
+            print("AggressiveRiskAnalyst: No trade proposal found in state.")
+            return {"aggressive_analysis_result": "Error: No trade proposal provided."}
 
-        trader_decision = state["trader_investment_plan"]
+        print(f"AggressiveRiskAnalyst received trade proposal for {trade_proposal.get('pair')}")
 
-        prompt = f"""As the Risky Risk Analyst, your role is to actively champion high-reward, high-risk opportunities, emphasizing bold strategies and competitive advantages. When evaluating the trader's decision or plan, focus intently on the potential upside, growth potential, and innovative benefits—even when these come with elevated risk. Use the provided market data and sentiment analysis to strengthen your arguments and challenge the opposing views. Specifically, respond directly to each point made by the conservative and neutral analysts, countering with data-driven rebuttals and persuasive reasoning. Highlight where their caution might miss critical opportunities or where their assumptions may be overly conservative. Here is the trader's decision:
+        # Mock analysis logic
+        pair = trade_proposal.get('pair', 'N/A')
+        confidence = trade_proposal.get('confidence_score', 0)
+        directive_bias_info = strategic_directive.get('primary_bias', {})
+        directive_direction = directive_bias_info.get('direction', 'neutral')
 
-{trader_decision}
+        # Example of incorporating parts of the directive into the rationale
+        analysis_string = (
+            f"Aggressive take on {pair}: This trade presents a significant reward potential. "
+            f"The sub-agent's confidence of {confidence:.2f} is noted. "
+            f"While risks exist, the current market {strategic_directive.get('volatility_expectation','conditions')} "
+            f"and overall directive bias towards '{directive_direction}' suggest this calculated risk is acceptable for the potential upside. "
+            f"Any downside seems limited if quick action is taken. Focus on the growth opportunity."
+        )
 
-Your task is to create a compelling case for the trader's decision by questioning and critiquing the conservative and neutral stances to demonstrate why your high-reward perspective offers the best path forward. Incorporate insights from the following sources into your arguments:
+        print(f"AggressiveRiskAnalyst generated analysis: {analysis_string}")
 
-Market Research Report: {market_research_report}
-Social Media Sentiment Report: {sentiment_report}
-Latest World Affairs Report: {news_report}
-Company Fundamentals Report: {fundamentals_report}
-Here is the current conversation history: {history} Here are the last arguments from the conservative analyst: {current_safe_response} Here are the last arguments from the neutral analyst: {current_neutral_response}. If there are no responses from the other viewpoints, do not halluncinate and just present your point.
+        # In a debate graph, this would update a specific key in the risk_debate_state
+        # For now, let's assume it returns its analysis under a defined key
+        return {"aggressive_analysis_output": analysis_string}
 
-Engage actively by addressing any specific concerns raised, refuting the weaknesses in their logic, and asserting the benefits of risk-taking to outpace market norms. Maintain a focus on debating and persuading, not just presenting data. Challenge each counterpoint to underscore why a high-risk approach is optimal. Output conversationally as if you are speaking without any special formatting."""
-
-        response = llm.invoke(prompt)
-
-        argument = f"Risky Analyst: {response.content}"
-
-        new_risk_debate_state = {
-            "history": history + "\n" + argument,
-            "risky_history": risky_history + "\n" + argument,
-            "safe_history": risk_debate_state.get("safe_history", ""),
-            "neutral_history": risk_debate_state.get("neutral_history", ""),
-            "latest_speaker": "Risky",
-            "current_risky_response": argument,
-            "current_safe_response": risk_debate_state.get("current_safe_response", ""),
-            "current_neutral_response": risk_debate_state.get(
-                "current_neutral_response", ""
-            ),
-            "count": risk_debate_state["count"] + 1,
-        }
-
-        return {"risk_debate_state": new_risk_debate_state}
-
-    return risky_node
+    return analyze_trade_risk
