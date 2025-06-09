@@ -1,0 +1,720 @@
+************* Module default_config
+TradingAgents/tradingagents/default_config.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+************* Module dataflows.finnhub_utils
+TradingAgents/tradingagents/dataflows/finnhub_utils.py:11:0: C0301: Line too long (141/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/finnhub_utils.py:13:0: C0301: Line too long (101/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/finnhub_utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/finnhub_utils.py:5:0: R0913: Too many arguments (6/5) (too-many-arguments)
+TradingAgents/tradingagents/dataflows/finnhub_utils.py:5:0: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+TradingAgents/tradingagents/dataflows/finnhub_utils.py:28:11: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+TradingAgents/tradingagents/dataflows/finnhub_utils.py:28:11: R1732: Consider using 'with' for resource-allocating operations (consider-using-with)
+************* Module dataflows.interface
+TradingAgents/tradingagents/dataflows/interface.py:70:0: C0301: Line too long (107/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:92:0: C0301: Line too long (148/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:98:0: C0301: Line too long (149/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:111:0: C0301: Line too long (122/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:134:0: C0301: Line too long (239/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:140:0: C0301: Line too long (802/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:170:0: C0301: Line too long (113/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:185:0: C0301: Line too long (113/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:187:0: C0301: Line too long (518/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:217:0: C0301: Line too long (113/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:232:0: C0301: Line too long (115/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:234:0: C0301: Line too long (577/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:264:0: C0301: Line too long (113/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:279:0: C0301: Line too long (109/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:281:0: C0301: Line too long (590/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:322:0: C0301: Line too long (198/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:376:0: C0301: Line too long (198/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:442:0: C0301: Line too long (113/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:447:0: C0301: Line too long (112/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:469:0: C0301: Line too long (101/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:475:0: C0301: Line too long (102/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:489:0: C0301: Line too long (104/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:490:0: C0301: Line too long (101/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:496:0: C0301: Line too long (111/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:499:0: C0301: Line too long (136/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:500:0: C0301: Line too long (125/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:501:0: C0301: Line too long (132/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:507:0: C0301: Line too long (105/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:716:0: C0301: Line too long (190/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:750:0: C0301: Line too long (233/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:784:0: C0301: Line too long (260/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/interface.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:3:0: W0401: Wildcard import yfin_utils (wildcard-import)
+TradingAgents/tradingagents/dataflows/interface.py:4:0: W0401: Wildcard import stockstats_utils (wildcard-import)
+TradingAgents/tradingagents/dataflows/interface.py:5:0: W0401: Wildcard import googlenews_utils (wildcard-import)
+TradingAgents/tradingagents/dataflows/interface.py:7:0: E0401: Unable to import 'dateutil.relativedelta' (import-error)
+TradingAgents/tradingagents/dataflows/interface.py:12:0: E0401: Unable to import 'pandas' (import-error)
+TradingAgents/tradingagents/dataflows/interface.py:13:0: E0401: Unable to import 'tqdm' (import-error)
+TradingAgents/tradingagents/dataflows/interface.py:14:0: E0401: Unable to import 'yfinance' (import-error)
+TradingAgents/tradingagents/dataflows/interface.py:15:0: E0401: Unable to import 'openai' (import-error)
+TradingAgents/tradingagents/dataflows/interface.py:89:8: W0612: Unused variable 'date' (unused-variable)
+TradingAgents/tradingagents/dataflows/interface.py:131:8: W0612: Unused variable 'date' (unused-variable)
+TradingAgents/tradingagents/dataflows/interface.py:144:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:191:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:238:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:285:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:422:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:558:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:578:11: W0718: Catching too general exception Exception (broad-exception-caught)
+TradingAgents/tradingagents/dataflows/interface.py:587:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:587:0: C0103: Function name "get_YFin_data_window" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/tradingagents/dataflows/interface.py:628:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:628:0: C0103: Function name "get_YFin_data_online" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/tradingagents/dataflows/interface.py:670:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:670:0: C0103: Function name "get_YFin_data" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/tradingagents/dataflows/interface.py:684:8: W0719: Raising too general exception: Exception (broad-exception-raised)
+TradingAgents/tradingagents/dataflows/interface.py:705:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:739:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:773:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/interface.py:7:0: C0411: third party import "dateutil.relativedelta.relativedelta" should be placed before local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:8:0: C0411: standard import "concurrent.futures.ThreadPoolExecutor" should be placed before third party import "dateutil.relativedelta.relativedelta" and local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:9:0: C0411: standard import "datetime.datetime" should be placed before third party import "dateutil.relativedelta.relativedelta" and local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:10:0: C0411: standard import "json" should be placed before third party import "dateutil.relativedelta.relativedelta" and local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:11:0: C0411: standard import "os" should be placed before third party import "dateutil.relativedelta.relativedelta" and local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:12:0: C0411: third party import "pandas" should be placed before local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:13:0: C0411: third party import "tqdm.tqdm" should be placed before local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:14:0: C0411: third party import "yfinance" should be placed before local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:15:0: C0411: third party import "openai.OpenAI" should be placed before local imports "reddit_utils.fetch_top_from_category", "yfin_utils.*", "stockstats_utils.*", "googlenews_utils.*", "finnhub_utils.get_data_in_range" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/interface.py:1:0: W0611: Unused Dict imported from typing (unused-import)
+TradingAgents/tradingagents/dataflows/interface.py:8:0: W0611: Unused ThreadPoolExecutor imported from concurrent.futures (unused-import)
+TradingAgents/tradingagents/dataflows/interface.py:16:0: W0611: Unused set_config imported from config (unused-import)
+TradingAgents/tradingagents/dataflows/interface.py:3:0: W0614: Unused import(s) init_ticker, YFinanceUtils, Callable, Any, Optional, DataFrame, wraps, save_output, SavePathType and decorate_all_methods from wildcard import of yfin_utils (unused-wildcard-import)
+TradingAgents/tradingagents/dataflows/interface.py:4:0: W0614: Unused import(s) wrap and get_config from wildcard import of stockstats_utils (unused-wildcard-import)
+TradingAgents/tradingagents/dataflows/interface.py:5:0: W0614: Unused import(s) json, requests, time, random, is_rate_limited, make_request, BeautifulSoup, retry, stop_after_attempt, wait_exponential, retry_if_exception_type and retry_if_result from wildcard import of googlenews_utils (unused-wildcard-import)
+************* Module dataflows.googlenews_utils
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:3:0: E0401: Unable to import 'bs4' (import-error)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:7:0: E0401: Unable to import 'tenacity' (import-error)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:30:15: W3101: Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely (missing-timeout)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:34:0: C0103: Function name "getNewsData" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:34:0: R0914: Too many local variables (19/15) (too-many-locals)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:104:15: W0718: Catching too general exception Exception (broad-exception-caught)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:90:23: W0718: Catching too general exception Exception (broad-exception-caught)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:4:0: C0411: standard import "datetime.datetime" should be placed before third party imports "requests", "bs4.BeautifulSoup" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:5:0: C0411: standard import "time" should be placed before third party imports "requests", "bs4.BeautifulSoup" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:6:0: C0411: standard import "random" should be placed before third party imports "requests", "bs4.BeautifulSoup" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:1:0: W0611: Unused import json (unused-import)
+TradingAgents/tradingagents/dataflows/googlenews_utils.py:7:0: W0611: Unused retry_if_exception_type imported from tenacity (unused-import)
+************* Module dataflows.stockstats_utils
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:25:0: C0301: Line too long (106/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:1:0: E0401: Unable to import 'pandas' (import-error)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:2:0: E0401: Unable to import 'yfinance' (import-error)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:3:0: E0401: Unable to import 'stockstats' (import-error)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:9:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:11:4: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:41:16: W0707: Consider explicitly re-raising using 'except FileNotFoundError as exc' and 'raise Exception('Stockstats fail: Yahoo Finance data not fetched yet!') from exc' (raise-missing-from)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:41:16: W0719: Raising too general exception: Exception (broad-exception-raised)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:80:8: W0104: Statement seems to have no effect (pointless-statement)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:83:8: R1705: Unnecessary "else" after "return", remove the "else" and de-indent the code inside it (no-else-return)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:9:0: R0903: Too few public methods (1/2) (too-few-public-methods)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:4:0: C0411: standard import "typing.Annotated" should be placed before third party imports "pandas", "yfinance", "stockstats.wrap" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/stockstats_utils.py:5:0: C0411: standard import "os" should be placed before third party imports "pandas", "yfinance", "stockstats.wrap" (wrong-import-order)
+************* Module dataflows
+TradingAgents/tradingagents/dataflows/__init__.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/__init__.py:6:0: W0404: Reimport 'YFinanceUtils' (imported line 3) (reimported)
+************* Module dataflows.yfin_utils
+TradingAgents/tradingagents/dataflows/yfin_utils.py:104:0: C0301: Line too long (114/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:3:0: E0401: Unable to import 'yfinance' (import-error)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:5:0: E0401: Unable to import 'pandas' (import-error)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:6:0: E0401: Unable to import 'pandas' (import-error)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:24:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:26:4: E0213: Method 'get_stock_data' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:41:21: E1101: Instance of 'YFinanceUtils' has no 'history' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:34:8: W0613: Unused argument 'save_path' (unused-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:45:4: E0213: Method 'get_stock_info' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:50:21: E1101: Instance of 'YFinanceUtils' has no 'info' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:53:4: E0213: Method 'get_company_info' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:59:15: E1101: Instance of 'YFinanceUtils' has no 'info' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:70:38: E1101: Instance of 'YFinanceUtils' has no 'ticker' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:73:4: E0213: Method 'get_stock_dividends' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:79:20: E1101: Instance of 'YFinanceUtils' has no 'dividends' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:82:35: E1101: Instance of 'YFinanceUtils' has no 'ticker' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:85:4: E0213: Method 'get_income_stmt' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:88:22: E1101: Instance of 'YFinanceUtils' has no 'financials' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:91:4: E0213: Method 'get_balance_sheet' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:94:24: E1101: Instance of 'YFinanceUtils' has no 'balance_sheet' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:97:4: E0213: Method 'get_cash_flow' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:100:20: E1101: Instance of 'YFinanceUtils' has no 'cashflow' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:103:4: E0213: Method 'get_analyst_recommendations' should have "self" as first argument (no-self-argument)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:106:26: E1101: Instance of 'YFinanceUtils' has no 'recommendations' member (no-member)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:4:0: C0411: standard import "typing.Annotated" should be placed before third party import "yfinance" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:7:0: C0411: standard import "functools.wraps" should be placed before third party imports "yfinance", "pandas.DataFrame", "pandas" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/yfin_utils.py:9:0: W0611: Unused save_output imported from utils (unused-import)
+************* Module dataflows.reddit_utils
+TradingAgents/tradingagents/dataflows/reddit_utils.py:70:0: C0301: Line too long (132/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:99:0: C0301: Line too long (114/100) (line-too-long)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:52:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:52:0: R0914: Too many local variables (19/15) (too-many-locals)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:85:16: W0612: Unused variable 'i' (unused-variable)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:2:0: C0411: standard import "time" should be placed before third party import "requests" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:3:0: C0411: standard import "json" should be placed before third party import "requests" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:4:0: C0411: standard import "datetime.datetime" should be placed before third party import "requests" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:5:0: C0411: standard import "contextlib.contextmanager" should be placed before third party import "requests" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:6:0: C0411: standard import "typing.Annotated" should be placed before third party import "requests" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:7:0: C0411: standard import "os" should be placed before third party import "requests" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:8:0: C0411: standard import "re" should be placed before third party import "requests" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:1:0: W0611: Unused import requests (unused-import)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:4:0: W0611: Unused timedelta imported from datetime (unused-import)
+TradingAgents/tradingagents/dataflows/reddit_utils.py:5:0: W0611: Unused contextmanager imported from contextlib (unused-import)
+************* Module dataflows.config
+TradingAgents/tradingagents/dataflows/config.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/config.py:1:0: R0402: Use 'from tradingagents import default_config' instead (consider-using-from-import)
+TradingAgents/tradingagents/dataflows/config.py:11:4: W0603: Using the global statement (global-statement)
+TradingAgents/tradingagents/dataflows/config.py:19:4: W0603: Using the global statement (global-statement)
+TradingAgents/tradingagents/dataflows/config.py:2:0: C0411: standard import "typing.Dict" should be placed before third party import "tradingagents.default_config" (wrong-import-order)
+************* Module dataflows.utils
+TradingAgents/tradingagents/dataflows/utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/dataflows/utils.py:3:0: E0401: Unable to import 'pandas' (import-error)
+TradingAgents/tradingagents/dataflows/utils.py:9:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/utils.py:15:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/utils.py:19:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/utils.py:29:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/dataflows/utils.py:29:21: W0621: Redefining name 'date' from outer scope (line 4) (redefined-outer-name)
+TradingAgents/tradingagents/dataflows/utils.py:34:4: R1705: Unnecessary "else" after "return", remove the "else" and de-indent the code inside it (no-else-return)
+TradingAgents/tradingagents/dataflows/utils.py:4:0: C0411: standard import "datetime.date" should be placed before third party import "pandas" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/utils.py:5:0: C0411: standard import "typing.Annotated" should be placed before third party import "pandas" (wrong-import-order)
+TradingAgents/tradingagents/dataflows/utils.py:1:0: W0611: Unused import os (unused-import)
+TradingAgents/tradingagents/dataflows/utils.py:2:0: W0611: Unused import json (unused-import)
+************* Module graph.trading_graph
+TradingAgents/tradingagents/graph/trading_graph.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/graph/trading_graph.py:9:0: E0401: Unable to import 'langchain_openai' (import-error)
+TradingAgents/tradingagents/graph/trading_graph.py:10:0: E0401: Unable to import 'langgraph.prebuilt' (import-error)
+TradingAgents/tradingagents/graph/trading_graph.py:12:0: W0401: Wildcard import tradingagents.agents (wildcard-import)
+TradingAgents/tradingagents/graph/trading_graph.py:29:0: R0902: Too many instance attributes (20/7) (too-many-instance-attributes)
+TradingAgents/tradingagents/graph/trading_graph.py:32:4: W0102: Dangerous default value [] as argument (dangerous-default-value)
+TradingAgents/tradingagents/graph/trading_graph.py:217:13: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+TradingAgents/tradingagents/graph/trading_graph.py:6:0: W0611: Unused date imported from datetime (unused-import)
+TradingAgents/tradingagents/graph/trading_graph.py:7:0: W0611: Unused Tuple imported from typing (unused-import)
+TradingAgents/tradingagents/graph/trading_graph.py:7:0: W0611: Unused List imported from typing (unused-import)
+TradingAgents/tradingagents/graph/trading_graph.py:7:0: W0611: Unused Optional imported from typing (unused-import)
+TradingAgents/tradingagents/graph/trading_graph.py:12:0: W0614: Unused import(s) create_msg_delete, AgentState, InvestDebateState, RiskDebateState, create_fundamentals_analyst, create_market_analyst, create_news_analyst, create_social_media_analyst, create_bear_researcher, create_bull_researcher, create_risky_debator, create_safe_debator, create_neutral_debator, create_research_manager, create_risk_manager and create_trader from wildcard import of tradingagents.agents (unused-wildcard-import)
+************* Module graph.conditional_logic
+TradingAgents/tradingagents/graph/conditional_logic.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+************* Module graph.propagation
+TradingAgents/tradingagents/graph/propagation.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/graph/propagation.py:4:0: W0611: Unused AgentState imported from tradingagents.agents.utils.agent_states (unused-import)
+************* Module graph
+TradingAgents/tradingagents/graph/__init__.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+************* Module graph.setup
+TradingAgents/tradingagents/graph/setup.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/graph/setup.py:4:0: E0401: Unable to import 'langchain_openai' (import-error)
+TradingAgents/tradingagents/graph/setup.py:5:0: E0401: Unable to import 'langgraph.graph' (import-error)
+TradingAgents/tradingagents/graph/setup.py:6:0: E0401: Unable to import 'langgraph.prebuilt' (import-error)
+TradingAgents/tradingagents/graph/setup.py:8:0: W0401: Wildcard import tradingagents.agents (wildcard-import)
+TradingAgents/tradingagents/graph/setup.py:15:0: R0902: Too many instance attributes (10/7) (too-many-instance-attributes)
+TradingAgents/tradingagents/graph/setup.py:18:4: R0913: Too many arguments (11/5) (too-many-arguments)
+TradingAgents/tradingagents/graph/setup.py:18:4: R0917: Too many positional arguments (11/5) (too-many-positional-arguments)
+TradingAgents/tradingagents/graph/setup.py:43:4: W0102: Dangerous default value [] as argument (dangerous-default-value)
+TradingAgents/tradingagents/graph/setup.py:43:4: R0914: Too many local variables (22/15) (too-many-locals)
+TradingAgents/tradingagents/graph/setup.py:43:4: R0915: Too many statements (62/50) (too-many-statements)
+TradingAgents/tradingagents/graph/setup.py:15:0: R0903: Too few public methods (1/2) (too-few-public-methods)
+TradingAgents/tradingagents/graph/setup.py:3:0: W0611: Unused Any imported from typing (unused-import)
+TradingAgents/tradingagents/graph/setup.py:8:0: W0614: Unused import(s) InvestDebateState, RiskDebateState and FinancialSituationMemory from wildcard import of tradingagents.agents (unused-wildcard-import)
+************* Module graph.reflection
+TradingAgents/tradingagents/graph/reflection.py:56:0: C0301: Line too long (117/100) (line-too-long)
+TradingAgents/tradingagents/graph/reflection.py:66:0: C0301: Line too long (131/100) (line-too-long)
+TradingAgents/tradingagents/graph/reflection.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/graph/reflection.py:4:0: E0401: Unable to import 'langchain_openai' (import-error)
+TradingAgents/tradingagents/graph/reflection.py:59:14: W0613: Unused argument 'component_type' (unused-argument)
+************* Module graph.signal_processing
+TradingAgents/tradingagents/graph/signal_processing.py:26:0: C0301: Line too long (327/100) (line-too-long)
+TradingAgents/tradingagents/graph/signal_processing.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/graph/signal_processing.py:3:0: E0401: Unable to import 'langchain_openai' (import-error)
+TradingAgents/tradingagents/graph/signal_processing.py:6:0: R0903: Too few public methods (1/2) (too-few-public-methods)
+************* Module agents
+TradingAgents/tradingagents/agents/__init__.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+************* Module agents.trader.trader
+TradingAgents/tradingagents/agents/trader/trader.py:15:0: C0301: Line too long (116/100) (line-too-long)
+TradingAgents/tradingagents/agents/trader/trader.py:24:0: C0301: Line too long (454/100) (line-too-long)
+TradingAgents/tradingagents/agents/trader/trader.py:30:0: C0301: Line too long (523/100) (line-too-long)
+TradingAgents/tradingagents/agents/trader/trader.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/trader/trader.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/trader/trader.py:7:4: R0914: Too many local variables (16/15) (too-many-locals)
+TradingAgents/tradingagents/agents/trader/trader.py:19:12: W0612: Unused variable 'i' (unused-variable)
+TradingAgents/tradingagents/agents/trader/trader.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/trader/trader.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.managers.risk_manager
+TradingAgents/tradingagents/agents/managers/risk_manager.py:18:0: C0301: Line too long (116/100) (line-too-long)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:25:0: C0301: Line too long (448/100) (line-too-long)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:44:0: C0301: Line too long (171/100) (line-too-long)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:5:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:6:4: R0914: Too many local variables (17/15) (too-many-locals)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:8:8: W0612: Unused variable 'company_name' (unused-variable)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:22:12: W0612: Unused variable 'i' (unused-variable)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:1:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/managers/risk_manager.py:2:0: W0611: Unused import json (unused-import)
+************* Module agents.managers.research_manager
+TradingAgents/tradingagents/agents/managers/research_manager.py:15:0: C0301: Line too long (116/100) (line-too-long)
+TradingAgents/tradingagents/agents/managers/research_manager.py:22:0: C0301: Line too long (287/100) (line-too-long)
+TradingAgents/tradingagents/agents/managers/research_manager.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/managers/research_manager.py:5:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/managers/research_manager.py:19:12: W0612: Unused variable 'i' (unused-variable)
+TradingAgents/tradingagents/agents/managers/research_manager.py:1:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/managers/research_manager.py:2:0: W0611: Unused import json (unused-import)
+************* Module agents.researchers.bear_researcher
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:18:0: C0301: Line too long (116/100) (line-too-long)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:25:0: C0301: Line too long (312/100) (line-too-long)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:1:0: E0401: Unable to import 'langchain_core.messages' (import-error)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:7:4: R0914: Too many local variables (18/15) (too-many-locals)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:22:12: W0612: Unused variable 'i' (unused-variable)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:2:0: C0411: standard import "time" should be placed before third party import "langchain_core.messages.AIMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:3:0: C0411: standard import "json" should be placed before third party import "langchain_core.messages.AIMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:1:0: W0611: Unused AIMessage imported from langchain_core.messages (unused-import)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/researchers/bear_researcher.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.researchers.bull_researcher
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:18:0: C0301: Line too long (116/100) (line-too-long)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:25:0: C0301: Line too long (323/100) (line-too-long)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:1:0: E0401: Unable to import 'langchain_core.messages' (import-error)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:7:4: R0914: Too many local variables (18/15) (too-many-locals)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:22:12: W0612: Unused variable 'i' (unused-variable)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:2:0: C0411: standard import "time" should be placed before third party import "langchain_core.messages.AIMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:3:0: C0411: standard import "json" should be placed before third party import "langchain_core.messages.AIMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:1:0: W0611: Unused AIMessage imported from langchain_core.messages (unused-import)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/researchers/bull_researcher.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.risk_mgmt.conservative_debator
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:22:0: C0301: Line too long (549/100) (line-too-long)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:34:0: C0301: Line too long (434/100) (line-too-long)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:1:0: E0401: Unable to import 'langchain_core.messages' (import-error)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:2:0: C0411: standard import "time" should be placed before third party import "langchain_core.messages.AIMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:3:0: C0411: standard import "json" should be placed before third party import "langchain_core.messages.AIMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:1:0: W0611: Unused AIMessage imported from langchain_core.messages (unused-import)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/risk_mgmt/conservative_debator.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.risk_mgmt.aggresive_debator
+TradingAgents/tradingagents/agents/risk_mgmt/aggresive_debator.py:21:0: C0301: Line too long (766/100) (line-too-long)
+TradingAgents/tradingagents/agents/risk_mgmt/aggresive_debator.py:33:0: C0301: Line too long (398/100) (line-too-long)
+TradingAgents/tradingagents/agents/risk_mgmt/aggresive_debator.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/risk_mgmt/aggresive_debator.py:5:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/risk_mgmt/aggresive_debator.py:1:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/risk_mgmt/aggresive_debator.py:2:0: W0611: Unused import json (unused-import)
+************* Module agents.risk_mgmt.neutral_debator
+TradingAgents/tradingagents/agents/risk_mgmt/neutral_debator.py:21:0: C0301: Line too long (386/100) (line-too-long)
+TradingAgents/tradingagents/agents/risk_mgmt/neutral_debator.py:33:0: C0301: Line too long (552/100) (line-too-long)
+TradingAgents/tradingagents/agents/risk_mgmt/neutral_debator.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/risk_mgmt/neutral_debator.py:5:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/risk_mgmt/neutral_debator.py:1:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/risk_mgmt/neutral_debator.py:2:0: W0611: Unused import json (unused-import)
+************* Module agents.analysts.news_analyst
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:21:0: C0301: Line too long (416/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:22:0: C0301: Line too long (148/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:31:0: C0301: Line too long (107/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:33:0: C0301: Line too long (122/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:34:0: C0301: Line too long (121/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:36:0: C0301: Line too long (117/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:1:0: E0401: Unable to import 'langchain_core.prompts' (import-error)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:2:0: C0411: standard import "time" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:3:0: C0411: standard import "json" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/analysts/news_analyst.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.analysts.social_media_analyst
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:20:0: C0301: Line too long (805/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:21:0: C0301: Line too long (149/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:30:0: C0301: Line too long (107/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:32:0: C0301: Line too long (122/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:33:0: C0301: Line too long (121/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:35:0: C0301: Line too long (129/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:1:0: E0401: Unable to import 'langchain_core.prompts' (import-error)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:10:8: W0612: Unused variable 'company_name' (unused-variable)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:2:0: C0411: standard import "time" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:3:0: C0411: standard import "json" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/analysts/social_media_analyst.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.analysts.market_analyst
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:25:0: C0301: Line too long (361/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:28:0: C0301: Line too long (199/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:29:0: C0301: Line too long (230/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:30:0: C0301: Line too long (223/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:33:0: C0301: Line too long (202/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:34:0: C0301: Line too long (185/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:35:0: C0301: Line too long (220/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:38:0: C0301: Line too long (233/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:41:0: C0301: Line too long (220/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:42:0: C0301: Line too long (237/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:43:0: C0301: Line too long (198/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:44:0: C0301: Line too long (232/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:47:0: C0301: Line too long (216/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:49:0: C0301: Line too long (658/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:49:0: C0301: Line too long (658/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:50:0: C0301: Line too long (148/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:59:0: C0301: Line too long (107/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:61:0: C0301: Line too long (122/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:62:0: C0301: Line too long (121/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:64:0: C0301: Line too long (121/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:1:0: E0401: Unable to import 'langchain_core.prompts' (import-error)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:11:8: W0612: Unused variable 'company_name' (unused-variable)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:2:0: C0411: standard import "time" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:3:0: C0411: standard import "json" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/analysts/market_analyst.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.analysts.fundamentals_analyst
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:24:0: C0301: Line too long (599/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:25:0: C0301: Line too long (145/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:34:0: C0301: Line too long (107/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:36:0: C0301: Line too long (122/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:37:0: C0301: Line too long (121/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:39:0: C0301: Line too long (121/100) (line-too-long)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:1:0: E0401: Unable to import 'langchain_core.prompts' (import-error)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:6:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:10:8: W0612: Unused variable 'company_name' (unused-variable)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:2:0: C0411: standard import "time" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:3:0: C0411: standard import "json" should be placed before third party import "langchain_core.prompts.ChatPromptTemplate" (wrong-import-order)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:2:0: W0611: Unused import time (unused-import)
+TradingAgents/tradingagents/agents/analysts/fundamentals_analyst.py:3:0: W0611: Unused import json (unused-import)
+************* Module agents.utils.agent_utils
+TradingAgents/tradingagents/agents/utils/agent_utils.py:19:0: C0301: Line too long (128/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:53:0: C0301: Line too long (113/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:55:0: C0303: Trailing whitespace (trailing-whitespace)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:77:0: C0301: Line too long (122/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:107:0: C0301: Line too long (101/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:128:0: C0301: Line too long (131/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:149:0: C0301: Line too long (131/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:176:0: C0301: Line too long (123/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:205:0: C0301: Line too long (123/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:224:0: C0301: Line too long (123/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:248:0: C0301: Line too long (125/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:253:0: C0301: Line too long (103/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:349:0: C0301: Line too long (114/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:381:0: C0301: Line too long (103/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:399:0: C0301: Line too long (115/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:404:0: C0301: Line too long (118/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:1:0: E0401: Unable to import 'langchain_core.messages' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:4:0: E0401: Unable to import 'langchain_core.prompts' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:5:0: E0401: Unable to import 'langchain_core.messages' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:6:0: E0401: Unable to import 'langchain_core.tools' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:9:0: E0401: Unable to import 'pandas' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:11:0: E0401: Unable to import 'dateutil.relativedelta' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:12:0: E0401: Unable to import 'langchain_openai' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:13:0: R0402: Use 'from tradingagents.dataflows import interface' instead (consider-using-from-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:17:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:26:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:116:4: C0103: Method name "get_YFin_data" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:137:4: C0103: Method name "get_YFin_data_online" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:2:0: C0411: standard import "typing.List" should be placed before third party import "langchain_core.messages.BaseMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:3:0: C0411: standard import "typing.Annotated" should be placed before third party import "langchain_core.messages.BaseMessage" (wrong-import-order)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:7:0: C0411: standard import "datetime.date" should be placed before third party imports "langchain_core.messages.BaseMessage", "langchain_core.prompts.ChatPromptTemplate", "langchain_core.messages.RemoveMessage", "langchain_core.tools.tool" (wrong-import-order)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:8:0: C0411: standard import "functools" should be placed before third party imports "langchain_core.messages.BaseMessage", "langchain_core.prompts.ChatPromptTemplate", "langchain_core.messages.RemoveMessage", "langchain_core.tools.tool" (wrong-import-order)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:10:0: C0411: standard import "os" should be placed before third party imports "langchain_core.messages.BaseMessage", "langchain_core.prompts.ChatPromptTemplate", "langchain_core.messages.RemoveMessage", "langchain_core.tools.tool", "pandas" (wrong-import-order)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:1:0: W0611: Unused BaseMessage imported from langchain_core.messages (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:1:0: W0611: Unused HumanMessage imported from langchain_core.messages (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:1:0: W0611: Unused ToolMessage imported from langchain_core.messages (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:1:0: W0611: Unused AIMessage imported from langchain_core.messages (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:2:0: W0611: Unused List imported from typing (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:4:0: W0611: Unused ChatPromptTemplate imported from langchain_core.prompts (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:4:0: W0611: Unused MessagesPlaceholder imported from langchain_core.prompts (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:7:0: W0611: Unused date imported from datetime (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:7:0: W0611: Unused timedelta imported from datetime (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:8:0: W0611: Unused import functools (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:9:0: W0611: Unused pandas imported as pd (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:10:0: W0611: Unused import os (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:11:0: W0611: Unused relativedelta imported from dateutil.relativedelta (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_utils.py:12:0: W0611: Unused ChatOpenAI imported from langchain_openai (unused-import)
+************* Module agents.utils.memory
+TradingAgents/tradingagents/agents/utils/memory.py:21:0: C0301: Line too long (117/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/memory.py:74:0: C0301: Line too long (118/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/memory.py:78:0: C0301: Line too long (141/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/memory.py:82:0: C0301: Line too long (120/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/memory.py:86:0: C0301: Line too long (136/100) (line-too-long)
+TradingAgents/tradingagents/agents/utils/memory.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/utils/memory.py:1:0: E0401: Unable to import 'chromadb' (import-error)
+TradingAgents/tradingagents/agents/utils/memory.py:2:0: E0401: Unable to import 'chromadb.config' (import-error)
+TradingAgents/tradingagents/agents/utils/memory.py:3:0: E0401: Unable to import 'openai' (import-error)
+TradingAgents/tradingagents/agents/utils/memory.py:4:0: E0401: Unable to import 'numpy' (import-error)
+TradingAgents/tradingagents/agents/utils/memory.py:7:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/tradingagents/agents/utils/memory.py:30:12: W0621: Redefining name 'i' from outer scope (line 102) (redefined-outer-name)
+TradingAgents/tradingagents/agents/utils/memory.py:43:27: W0621: Redefining name 'current_situation' from outer scope (line 94) (redefined-outer-name)
+TradingAgents/tradingagents/agents/utils/memory.py:54:12: W0621: Redefining name 'i' from outer scope (line 102) (redefined-outer-name)
+TradingAgents/tradingagents/agents/utils/memory.py:68:14: E1120: No value for argument 'name' in constructor call (no-value-for-parameter)
+TradingAgents/tradingagents/agents/utils/memory.py:94:4: C0103: Constant name "current_situation" doesn't conform to UPPER_CASE naming style (invalid-name)
+TradingAgents/tradingagents/agents/utils/memory.py:108:11: W0718: Catching too general exception Exception (broad-exception-caught)
+TradingAgents/tradingagents/agents/utils/memory.py:4:0: W0611: Unused numpy imported as np (unused-import)
+************* Module agents.utils.agent_states
+TradingAgents/tradingagents/agents/utils/agent_states.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/tradingagents/agents/utils/agent_states.py:4:0: E0401: Unable to import 'langchain_openai' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_states.py:5:0: W0401: Wildcard import tradingagents.agents (wildcard-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:6:0: E0401: Unable to import 'langgraph.prebuilt' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_states.py:7:0: E0401: Unable to import 'langgraph.graph' (import-error)
+TradingAgents/tradingagents/agents/utils/agent_states.py:11:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/tradingagents/agents/utils/agent_states.py:11:0: E0102: class already defined line 5 (function-redefined)
+TradingAgents/tradingagents/agents/utils/agent_states.py:25:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/tradingagents/agents/utils/agent_states.py:25:0: E0102: class already defined line 5 (function-redefined)
+TradingAgents/tradingagents/agents/utils/agent_states.py:50:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/tradingagents/agents/utils/agent_states.py:50:0: E0102: class already defined line 5 (function-redefined)
+TradingAgents/tradingagents/agents/utils/agent_states.py:50:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+TradingAgents/tradingagents/agents/utils/agent_states.py:1:0: W0611: Unused Sequence imported from typing (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:2:0: W0611: Unused date imported from datetime (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:2:0: W0611: Unused timedelta imported from datetime (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:2:0: W0611: Unused datetime imported from datetime (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:3:0: W0611: Unused Optional imported from typing_extensions (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:4:0: W0611: Unused ChatOpenAI imported from langchain_openai (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:6:0: W0611: Unused ToolNode imported from langgraph.prebuilt (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:7:0: W0611: Unused END imported from langgraph.graph (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:7:0: W0611: Unused StateGraph imported from langgraph.graph (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:7:0: W0611: Unused START imported from langgraph.graph (unused-import)
+TradingAgents/tradingagents/agents/utils/agent_states.py:5:0: W0614: Unused import(s) AgentState, Toolkit, create_msg_delete, FinancialSituationMemory, create_fundamentals_analyst, create_market_analyst, create_news_analyst, create_social_media_analyst, create_bear_researcher, create_bull_researcher, create_risky_debator, create_safe_debator, create_neutral_debator, create_research_manager, create_risk_manager and create_trader from wildcard import of tradingagents.agents (unused-wildcard-import)
+************* Module cli.models
+TradingAgents/cli/models.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/cli/models.py:3:0: E0401: Unable to import 'pydantic' (import-error)
+TradingAgents/cli/models.py:6:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/cli/models.py:2:0: W0611: Unused List imported from typing (unused-import)
+TradingAgents/cli/models.py:2:0: W0611: Unused Optional imported from typing (unused-import)
+TradingAgents/cli/models.py:2:0: W0611: Unused Dict imported from typing (unused-import)
+TradingAgents/cli/models.py:3:0: W0611: Unused BaseModel imported from pydantic (unused-import)
+************* Module cli.main
+TradingAgents/cli/main.py:369:0: C0301: Line too long (109/100) (line-too-long)
+TradingAgents/cli/main.py:383:0: C0301: Line too long (119/100) (line-too-long)
+TradingAgents/cli/main.py:385:0: C0301: Line too long (126/100) (line-too-long)
+TradingAgents/cli/main.py:436:0: C0301: Line too long (104/100) (line-too-long)
+TradingAgents/cli/main.py:856:0: C0301: Line too long (134/100) (line-too-long)
+TradingAgents/cli/main.py:873:0: C0301: Line too long (150/100) (line-too-long)
+TradingAgents/cli/main.py:948:0: C0301: Line too long (102/100) (line-too-long)
+TradingAgents/cli/main.py:1:0: C0302: Too many lines in module (1009/1000) (too-many-lines)
+TradingAgents/cli/main.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/cli/main.py:3:0: E0401: Unable to import 'typer' (import-error)
+TradingAgents/cli/main.py:4:0: E0401: Unable to import 'rich.console' (import-error)
+TradingAgents/cli/main.py:5:0: E0401: Unable to import 'rich.panel' (import-error)
+TradingAgents/cli/main.py:6:0: E0401: Unable to import 'rich.spinner' (import-error)
+TradingAgents/cli/main.py:7:0: E0401: Unable to import 'rich.live' (import-error)
+TradingAgents/cli/main.py:8:0: E0401: Unable to import 'rich.columns' (import-error)
+TradingAgents/cli/main.py:9:0: E0401: Unable to import 'rich.markdown' (import-error)
+TradingAgents/cli/main.py:10:0: E0401: Unable to import 'rich.layout' (import-error)
+TradingAgents/cli/main.py:11:0: E0401: Unable to import 'rich.text' (import-error)
+TradingAgents/cli/main.py:12:0: E0401: Unable to import 'rich.live' (import-error)
+TradingAgents/cli/main.py:12:0: W0404: Reimport 'Live' (imported line 7) (reimported)
+TradingAgents/cli/main.py:13:0: E0401: Unable to import 'rich.table' (import-error)
+TradingAgents/cli/main.py:16:0: E0401: Unable to import 'rich.tree' (import-error)
+TradingAgents/cli/main.py:17:0: E0401: Unable to import 'rich' (import-error)
+TradingAgents/cli/main.py:18:0: E0401: Unable to import 'rich.align' (import-error)
+TradingAgents/cli/main.py:19:0: E0401: Unable to import 'rich.rule' (import-error)
+TradingAgents/cli/main.py:24:0: W0401: Wildcard import cli.utils (wildcard-import)
+TradingAgents/cli/main.py:36:0: C0115: Missing class docstring (missing-class-docstring)
+TradingAgents/cli/main.py:72:4: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:76:4: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:80:4: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:85:4: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:171:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:187:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:187:0: R0914: Too many local variables (26/15) (too-many-locals)
+TradingAgents/cli/main.py:187:0: R0912: Too many branches (15/12) (too-many-branches)
+TradingAgents/cli/main.py:187:0: R0915: Too many statements (58/50) (too-many-statements)
+TradingAgents/cli/main.py:378:9: W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+TradingAgents/cli/main.py:466:0: E0102: function already defined line 24 (function-redefined)
+TradingAgents/cli/main.py:471:0: E0102: function already defined line 24 (function-redefined)
+TradingAgents/cli/main.py:490:0: R0912: Too many branches (17/12) (too-many-branches)
+TradingAgents/cli/main.py:687:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:687:0: R0914: Too many local variables (25/15) (too-many-locals)
+TradingAgents/cli/main.py:993:23: C0201: Consider iterating the dictionary directly instead of calling .keys() (consider-iterating-dictionary)
+TradingAgents/cli/main.py:687:0: R0912: Too many branches (32/12) (too-many-branches)
+TradingAgents/cli/main.py:687:0: R0915: Too many statements (117/50) (too-many-statements)
+TradingAgents/cli/main.py:706:47: W0612: Unused variable 'live' (unused-variable)
+TradingAgents/cli/main.py:982:8: W0612: Unused variable 'decision' (unused-variable)
+TradingAgents/cli/main.py:1004:0: C0116: Missing function or method docstring (missing-function-docstring)
+TradingAgents/cli/main.py:14:0: C0411: standard import "collections.deque" should be placed before third party imports "typer", "rich.console.Console", "rich.panel.Panel" (...) "rich.text.Text", "rich.live.Live", "rich.table.Table" (wrong-import-order)
+TradingAgents/cli/main.py:15:0: C0411: standard import "time" should be placed before third party imports "typer", "rich.console.Console", "rich.panel.Panel" (...) "rich.text.Text", "rich.live.Live", "rich.table.Table" (wrong-import-order)
+TradingAgents/cli/main.py:1:0: W0611: Unused Optional imported from typing (unused-import)
+TradingAgents/cli/main.py:15:0: W0611: Unused import time (unused-import)
+TradingAgents/cli/main.py:16:0: W0611: Unused Tree imported from rich.tree (unused-import)
+TradingAgents/cli/main.py:19:0: W0611: Unused Rule imported from rich.rule (unused-import)
+TradingAgents/cli/main.py:23:0: W0611: Unused AnalystType imported from cli.models (unused-import)
+TradingAgents/cli/main.py:24:0: W0614: Unused import(s) questionary, ANALYST_ORDER, List, Tuple and Dict from wildcard import of cli.utils (unused-wildcard-import)
+************* Module cli.utils
+TradingAgents/cli/utils.py:74:0: C0301: Line too long (127/100) (line-too-long)
+TradingAgents/cli/utils.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+TradingAgents/cli/utils.py:1:0: E0401: Unable to import 'questionary' (import-error)
+TradingAgents/cli/utils.py:28:8: E0602: Undefined variable 'console' (undefined-variable)
+TradingAgents/cli/utils.py:29:8: R1722: Consider using 'sys.exit' instead (consider-using-sys-exit)
+TradingAgents/cli/utils.py:36:4: C0415: Import outside toplevel (re) (import-outside-toplevel)
+TradingAgents/cli/utils.py:37:4: C0415: Import outside toplevel (datetime.datetime) (import-outside-toplevel)
+TradingAgents/cli/utils.py:61:8: E0602: Undefined variable 'console' (undefined-variable)
+TradingAgents/cli/utils.py:62:8: R1722: Consider using 'sys.exit' instead (consider-using-sys-exit)
+TradingAgents/cli/utils.py:87:8: E0602: Undefined variable 'console' (undefined-variable)
+TradingAgents/cli/utils.py:88:8: R1722: Consider using 'sys.exit' instead (consider-using-sys-exit)
+TradingAgents/cli/utils.py:97:4: C0103: Variable name "DEPTH_OPTIONS" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/cli/utils.py:119:8: E0602: Undefined variable 'console' (undefined-variable)
+TradingAgents/cli/utils.py:120:8: R1722: Consider using 'sys.exit' instead (consider-using-sys-exit)
+TradingAgents/cli/utils.py:129:4: C0103: Variable name "SHALLOW_AGENT_OPTIONS" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/cli/utils.py:153:8: E0602: Undefined variable 'console' (undefined-variable)
+TradingAgents/cli/utils.py:156:8: R1722: Consider using 'sys.exit' instead (consider-using-sys-exit)
+TradingAgents/cli/utils.py:165:4: C0103: Variable name "DEEP_AGENT_OPTIONS" doesn't conform to snake_case naming style (invalid-name)
+TradingAgents/cli/utils.py:192:8: E0602: Undefined variable 'console' (undefined-variable)
+TradingAgents/cli/utils.py:193:8: R1722: Consider using 'sys.exit' instead (consider-using-sys-exit)
+TradingAgents/cli/utils.py:2:0: C0411: standard import "typing.List" should be placed before third party import "questionary" (wrong-import-order)
+TradingAgents/cli/utils.py:2:0: W0611: Unused Optional imported from typing (unused-import)
+TradingAgents/cli/utils.py:2:0: W0611: Unused Tuple imported from typing (unused-import)
+TradingAgents/cli/utils.py:2:0: W0611: Unused Dict imported from typing (unused-import)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.analysts.fundamentals_analyst:[25:55]
+==agents.analysts.market_analyst:[50:80]
+        )
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are a helpful AI assistant, collaborating with other assistants."
+                    " Use the provided tools to progress towards answering the question."
+                    " If you are unable to fully answer, that's OK; another assistant with different tools"
+                    " will help where you left off. Execute what you can to make progress."
+                    " If you or any other assistant has the FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** or deliverable,"
+                    " prefix your response with FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** so the team knows to stop."
+                    " You have access to the following tools: {tool_names}.\n{system_message}"
+                    "For your reference, the current date is {current_date}. The company we want to look at is {ticker}",
+                ),
+                MessagesPlaceholder(variable_name="messages"),
+            ]
+        )
+
+        prompt = prompt.partial(system_message=system_message)
+        prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
+        prompt = prompt.partial(current_date=current_date)
+        prompt = prompt.partial(ticker=ticker)
+
+        chain = prompt | llm.bind_tools(tools)
+
+        result = chain.invoke(state["messages"])
+
+        return {
+            "messages": [result], (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.analysts.news_analyst:[36:51]
+==agents.analysts.social_media_analyst:[35:51]
+                ),
+                MessagesPlaceholder(variable_name="messages"),
+            ]
+        )
+
+        prompt = prompt.partial(system_message=system_message)
+        prompt = prompt.partial(tool_names=", ".join([tool.name for tool in tools]))
+        prompt = prompt.partial(current_date=current_date)
+        prompt = prompt.partial(ticker=ticker)
+
+        chain = prompt | llm.bind_tools(tools)
+
+        result = chain.invoke(state["messages"])
+
+        return {
+            "messages": [result], (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.analysts.news_analyst:[22:35]
+==agents.analysts.social_media_analyst:[21:34]
+        )
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "You are a helpful AI assistant, collaborating with other assistants."
+                    " Use the provided tools to progress towards answering the question."
+                    " If you are unable to fully answer, that's OK; another assistant with different tools"
+                    " will help where you left off. Execute what you can to make progress."
+                    " If you or any other assistant has the FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** or deliverable,"
+                    " prefix your response with FINAL TRANSACTION PROPOSAL: **BUY/HOLD/SELL** so the team knows to stop."
+                    " You have access to the following tools: {tool_names}.\n{system_message}" (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.researchers.bear_researcher:[11:24]
+==agents.researchers.bull_researcher:[11:24]
+        current_response = investment_debate_state.get("current_response", "")
+        market_research_report = state["market_report"]
+        sentiment_report = state["sentiment_report"]
+        news_report = state["news_report"]
+        fundamentals_report = state["fundamentals_report"]
+
+        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
+        past_memories = memory.get_memories(curr_situation, n_matches=2)
+
+        past_memory_str = ""
+        for i, rec in enumerate(past_memories, 1):
+            past_memory_str += rec["recommendation"] + "\n\n"
+ (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.researchers.bear_researcher:[12:24]
+==agents.trader.trader:[9:21]
+        market_research_report = state["market_report"]
+        sentiment_report = state["sentiment_report"]
+        news_report = state["news_report"]
+        fundamentals_report = state["fundamentals_report"]
+
+        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
+        past_memories = memory.get_memories(curr_situation, n_matches=2)
+
+        past_memory_str = ""
+        for i, rec in enumerate(past_memories, 1):
+            past_memory_str += rec["recommendation"] + "\n\n"
+ (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.risk_mgmt.aggresive_debator:[11:20]
+==agents.risk_mgmt.conservative_debator:[12:21]
+        current_neutral_response = risk_debate_state.get("current_neutral_response", "")
+
+        market_research_report = state["market_report"]
+        sentiment_report = state["sentiment_report"]
+        news_report = state["news_report"]
+        fundamentals_report = state["fundamentals_report"]
+
+        trader_decision = state["trader_investment_plan"]
+ (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.researchers.bear_researcher:[34:41]
+==agents.researchers.bull_researcher:[33:39]
+Resources available:
+
+Market research report: {market_research_report}
+Social media sentiment report: {sentiment_report}
+Latest world affairs news: {news_report}
+Company fundamentals report: {fundamentals_report}
+Conversation history of the debate: {history} (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.risk_mgmt.conservative_debator:[14:21]
+==agents.risk_mgmt.neutral_debator:[13:20]
+        market_research_report = state["market_report"]
+        sentiment_report = state["sentiment_report"]
+        news_report = state["news_report"]
+        fundamentals_report = state["fundamentals_report"]
+
+        trader_decision = state["trader_investment_plan"]
+ (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.managers.research_manager:[14:21]
+==agents.researchers.bear_researcher:[17:24]
+        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
+        past_memories = memory.get_memories(curr_situation, n_matches=2)
+
+        past_memory_str = ""
+        for i, rec in enumerate(past_memories, 1):
+            past_memory_str += rec["recommendation"] + "\n\n"
+ (duplicate-code)
+TradingAgents/cli/utils.py:1:0: R0801: Similar lines in 2 files
+==agents.managers.risk_manager:[17:24]
+==agents.trader.trader:[14:21]
+        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
+        past_memories = memory.get_memories(curr_situation, n_matches=2)
+
+        past_memory_str = ""
+        for i, rec in enumerate(past_memories, 1):
+            past_memory_str += rec["recommendation"] + "\n\n"
+ (duplicate-code)
+
+-----------------------------------
+Your code has been rated at 4.49/10
