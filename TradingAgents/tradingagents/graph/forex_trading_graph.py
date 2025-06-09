@@ -95,7 +95,6 @@ class ForexTradingGraph:
 
         return graph.compile()
 
-    # Node functions now return dictionaries that will update the ForexGraphState
     def run_forex_master_agent(self, state: ForexGraphState) -> Dict[str, Any]:
         print("--- Running Forex Master Agent ---")
         market_outlook = state.get("market_outlook", {"summary": "Default neutral market outlook."})
@@ -155,10 +154,6 @@ class ForexTradingGraph:
             error_message=None
         )
 
-        # The 'invoke' method on a compiled graph returns the final state.
-        # For streaming and seeing intermediate states, self.workflow.stream() is used.
-        # Since node functions now correctly return dicts to update state keys,
-        # the final state from invoke should be complete.
         final_state = self.workflow.invoke(graph_input)
         print("--- Forex Trading Graph Run Complete ---")
         return final_state
@@ -197,14 +192,13 @@ if __name__ == "__main__":
         },
         "user_preferences": {
             "risk_appetite": "conservative",
-            "preferred_pairs": ["EUR/USD", "USD/JPY", "GBP/JPY"],
-            "trading_style_preference": "swing_trader",
+            "preferred_pairs": ["EUR/USD", "USD/JPY", "GBP/JPY"], # These will be used by DayTraderAgent
+            "trading_style_preference": "day_trader", # To make DayTraderAgent potentially more active
             "disallowed_pairs": ["USD/CAD"]
         },
         "portfolio_status": {"balance": 50000, "equity": 50000, "margin_available": 50000, "open_positions": []}
     }
 
-    # Using .invoke() now for the final state
     final_output_state = forex_graph_instance.run(initial_run_state)
 
     print("\n--- Final Graph Output (all keys from final state) ---")
@@ -213,7 +207,6 @@ if __name__ == "__main__":
              print(f"{key}: {value}")
 
     print("\n--- Specific check for Strategic Directive ---")
-    # Accessing strategic_directive directly from the final state dictionary
     strategic_directive_output = final_output_state.get("strategic_directive")
     if strategic_directive_output:
         print("Strategic Directive Output:")
@@ -221,3 +214,29 @@ if __name__ == "__main__":
             print(f"  {k}: {v}")
     else:
         print("Strategic Directive not found in final output.")
+
+    print("\n--- Specific check for Day Trader Proposals ---")
+    day_trader_proposals = final_output_state.get("day_trader_proposals")
+    if day_trader_proposals:
+        print(f"Day Trader Proposals ({len(day_trader_proposals)}):")
+        for proposal_idx, proposal in enumerate(day_trader_proposals):
+            print(f"  Proposal {proposal_idx + 1}:")
+            for k, v in proposal.items():
+                print(f"    {k}: {v}")
+    elif day_trader_proposals == []:
+         print("Day Trader Proposals: [] (No trades proposed)")
+    else:
+        print("Day Trader Proposals not found or not run in output.")
+
+    print("\n--- Specific check for Swing Trader Proposals ---")
+    swing_trader_proposals = final_output_state.get("swing_trader_proposals")
+    if swing_trader_proposals:
+        print(f"Swing Trader Proposals ({len(swing_trader_proposals)}):")
+        for proposal_idx, proposal in enumerate(swing_trader_proposals):
+            print(f"  Proposal {proposal_idx + 1}:")
+            for k, v in proposal.items():
+                print(f"    {k}: {v}")
+    elif swing_trader_proposals == []:
+        print("Swing Trader Proposals: [] (No trades proposed)")
+    else:
+        print("Swing Trader Proposals not found or not run in output.")
