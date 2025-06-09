@@ -1,6 +1,7 @@
 # Assuming your existing TradingAgentsGraph is also here, or other graph setups
 # from .original_trading_graph import TradingAgentsGraph # If you have one
 from .forex_trading_graph import ForexTradingGraph, ForexGraphState
+from .risk_assessment_graph import RiskAssessmentGraph, RiskGraphState
 
 # Also re-exporting other potentially useful items from the original graph module if they exist
 # For example, if you have these in your current __init__.py for the existing graph:
@@ -11,6 +12,6 @@ from .forex_trading_graph import ForexTradingGraph, ForexGraphState
 # from .signal_processing import SignalProcessor
 
 # If the original TradingAgentsGraph is still relevant and distinct:
-# __all__ = ["ForexTradingGraph", "ForexGraphState", "TradingAgentsGraph"]
+# __all__ = ["ForexTradingGraph", "ForexGraphState", "RiskAssessmentGraph", "RiskGraphState", "TradingAgentsGraph"]
 # Else, if ForexTradingGraph is the main one now:
-__all__ = ["ForexTradingGraph", "ForexGraphState"]
+__all__ = ["ForexTradingGraph", "ForexGraphState", "RiskAssessmentGraph", "RiskGraphState"]

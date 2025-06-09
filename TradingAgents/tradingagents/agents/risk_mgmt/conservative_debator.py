@@ -1,58 +1,51 @@
-from langchain_core.messages import AIMessage
-import time
-import json
+from typing import Any, Dict, List, Optional
 
+# Placeholder for actual LLM
+# class PlaceholderLLM:
+#     def invoke(self, prompt: str) -> str:
+#         return f"LLM mock response to: {prompt[:100]}..."
 
-def create_safe_debator(llm):
-    def safe_node(state) -> dict:
-        risk_debate_state = state["risk_debate_state"]
-        history = risk_debate_state.get("history", "")
-        safe_history = risk_debate_state.get("safe_history", "")
+def create_safe_debator(llm: Any): # llm is passed but not used in this mock version
+    """
+    Creates a node function for the Conservative Risk Analyst.
+    This analyst focuses on capital preservation and potential downsides.
+    """
 
-        current_risky_response = risk_debate_state.get("current_risky_response", "")
-        current_neutral_response = risk_debate_state.get("current_neutral_response", "")
+    def analyze_trade_risk(
+        state: Dict[str, Any] # LangGraph state
+    ) -> Dict[str, Any]: # Returns a dictionary to update the state
+        """
+        Analyzes a specific trade proposal from a conservative perspective.
+        Expected in state:
+        - current_trade_proposal: Dict[str, Any]
+        - strategic_directive: Optional[Dict[str, Any]]
+        - portfolio_context: Optional[Dict[str, Any]] (not used in this mock)
+        """
+        trade_proposal = state.get("current_trade_proposal")
+        strategic_directive = state.get("strategic_directive", {})
+        # portfolio_context = state.get("portfolio_context", {})
 
-        market_research_report = state["market_report"]
-        sentiment_report = state["sentiment_report"]
-        news_report = state["news_report"]
-        fundamentals_report = state["fundamentals_report"]
+        if not trade_proposal:
+            print("ConservativeRiskAnalyst: No trade proposal found in state.")
+            return {"conservative_analysis_result": "Error: No trade proposal provided."}
 
-        trader_decision = state["trader_investment_plan"]
+        print(f"ConservativeRiskAnalyst received trade proposal for {trade_proposal.get('pair')}")
 
-        prompt = f"""As the Safe/Conservative Risk Analyst, your primary objective is to protect assets, minimize volatility, and ensure steady, reliable growth. You prioritize stability, security, and risk mitigation, carefully assessing potential losses, economic downturns, and market volatility. When evaluating the trader's decision or plan, critically examine high-risk elements, pointing out where the decision may expose the firm to undue risk and where more cautious alternatives could secure long-term gains. Here is the trader's decision:
+        # Mock analysis logic
+        pair = trade_proposal.get('pair', 'N/A')
+        stop_loss = trade_proposal.get('stop_loss', 'N/A')
+        volatility_expectation = strategic_directive.get('volatility_expectation', 'unknown')
+        confidence = trade_proposal.get('confidence_score', 0)
 
-{trader_decision}
+        analysis_string = (
+            f"Conservative view on {pair}: The proposed stop-loss at {stop_loss} might be too tight, "
+            f"especially given the market's expected volatility of '{volatility_expectation}'. "
+            f"Confidence score of {confidence:.2f} is noted, but potential downside exists if key support levels are breached. "
+            f"Consider a wider stop or waiting for more confirmation to ensure capital preservation."
+        )
 
-Your task is to actively counter the arguments of the Risky and Neutral Analysts, highlighting where their views may overlook potential threats or fail to prioritize sustainability. Respond directly to their points, drawing from the following data sources to build a convincing case for a low-risk approach adjustment to the trader's decision:
+        print(f"ConservativeRiskAnalyst generated analysis: {analysis_string}")
 
-Market Research Report: {market_research_report}
-Social Media Sentiment Report: {sentiment_report}
-Latest World Affairs Report: {news_report}
-Company Fundamentals Report: {fundamentals_report}
-Here is the current conversation history: {history} Here is the last response from the risky analyst: {current_risky_response} Here is the last response from the neutral analyst: {current_neutral_response}. If there are no responses from the other viewpoints, do not halluncinate and just present your point.
+        return {"conservative_analysis_output": analysis_string}
 
-Engage by questioning their optimism and emphasizing the potential downsides they may have overlooked. Address each of their counterpoints to showcase why a conservative stance is ultimately the safest path for the firm's assets. Focus on debating and critiquing their arguments to demonstrate the strength of a low-risk strategy over their approaches. Output conversationally as if you are speaking without any special formatting."""
-
-        response = llm.invoke(prompt)
-
-        argument = f"Safe Analyst: {response.content}"
-
-        new_risk_debate_state = {
-            "history": history + "\n" + argument,
-            "risky_history": risk_debate_state.get("risky_history", ""),
-            "safe_history": safe_history + "\n" + argument,
-            "neutral_history": risk_debate_state.get("neutral_history", ""),
-            "latest_speaker": "Safe",
-            "current_risky_response": risk_debate_state.get(
-                "current_risky_response", ""
-            ),
-            "current_safe_response": argument,
-            "current_neutral_response": risk_debate_state.get(
-                "current_neutral_response", ""
-            ),
-            "count": risk_debate_state["count"] + 1,
-        }
-
-        return {"risk_debate_state": new_risk_debate_state}
-
-    return safe_node
+    return analyze_trade_risk

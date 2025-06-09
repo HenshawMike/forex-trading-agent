@@ -1,66 +1,95 @@
-import time
-import json
+from typing import Any, Dict, List, Optional
+
+# Placeholder for actual LLM and Memory, assuming they are passed in
+# class PlaceholderLLM:
+#     def invoke(self, prompt: str) -> str:
+#         return f"LLM mock response to: {prompt[:100]}..."
+# class PlaceholderMemory:
+#     def get_memories(self, query: str, n_matches: int) -> List[Dict]:
+#         return [{"recommendation": "Past lesson: be cautious with high volatility."}]
 
 
-def create_risk_manager(llm, memory):
-    def risk_manager_node(state) -> dict:
+def create_risk_manager(llm: Any, memory: Any): # llm and memory are passed but not directly used in this mock
+    """
+    Creates a node function for the Risk Manager (Risk Judge).
+    This manager synthesizes analyses from different risk perspectives to make a final judgment.
+    """
 
-        company_name = state["company_of_interest"]
+    def judge_trade_risk(
+        state: Dict[str, Any] # LangGraph state
+    ) -> Dict[str, Any]: # Returns a dictionary to update the state
+        """
+        Judges the risk of a trade proposal based on analyses from different risk analysts.
+        Expected in state:
+        - aggressive_analysis_output: str
+        - neutral_analysis_output: str
+        - conservative_analysis_output: str
+        - current_trade_proposal: Dict[str, Any]
+        """
+        aggressive_analysis = state.get("aggressive_analysis_output", "No aggressive analysis provided.")
+        neutral_analysis = state.get("neutral_analysis_output", "No neutral analysis provided.")
+        conservative_analysis = state.get("conservative_analysis_output", "No conservative analysis provided.")
+        original_trade_proposal = state.get("current_trade_proposal")
 
-        history = state["risk_debate_state"]["history"]
-        risk_debate_state = state["risk_debate_state"]
-        market_research_report = state["market_report"]
-        news_report = state["news_report"]
-        fundamentals_report = state["news_report"]
-        sentiment_report = state["sentiment_report"]
-        trader_plan = state["investment_plan"]
+        if not original_trade_proposal:
+            print("RiskManager: No trade proposal found in state for judgment.")
+            return {"risk_manager_judgment": {"error": "No trade proposal provided for judgment."}}
 
-        curr_situation = f"{market_research_report}\n\n{sentiment_report}\n\n{news_report}\n\n{fundamentals_report}"
-        past_memories = memory.get_memories(curr_situation, n_matches=2)
+        print(f"RiskManager received analyses for trade proposal {original_trade_proposal.get('pair')}:")
+        print(f"  Aggressive: {aggressive_analysis}")
+        print(f"  Neutral: {neutral_analysis}")
+        print(f"  Conservative: {conservative_analysis}")
+        print(f"  Original Proposal: {original_trade_proposal}")
 
-        past_memory_str = ""
-        for i, rec in enumerate(past_memories, 1):
-            past_memory_str += rec["recommendation"] + "\n\n"
+        # Mock synthesis logic
+        risk_score = 0.3  # Default low-medium risk
 
-        prompt = f"""As the Risk Management Judge and Debate Facilitator, your goal is to evaluate the debate between three risk analysts—Risky, Neutral, and Safe/Conservative—and determine the best course of action for the trader. Your decision must result in a clear recommendation: Buy, Sell, or Hold. Choose Hold only if strongly justified by specific arguments, not as a fallback when all sides seem valid. Strive for clarity and decisiveness.
+        if "conservative" in conservative_analysis.lower() and "tight" in conservative_analysis.lower():
+            risk_score = max(risk_score, 0.6) # If conservative view is strong, increase risk
+        if "high reward potential" in aggressive_analysis.lower() and "acceptable risk" in aggressive_analysis.lower():
+            risk_score = min(risk_score, 0.4) # If aggressive makes a strong case for reward justifying risk
+        if "borderline" in neutral_analysis.lower() or "mixed" in neutral_analysis.lower():
+            risk_score = (risk_score + 0.5) / 2 # Move towards medium if neutral is hesitant
 
-Guidelines for Decision-Making:
-1. **Summarize Key Arguments**: Extract the strongest points from each analyst, focusing on relevance to the context.
-2. **Provide Rationale**: Support your recommendation with direct quotes and counterarguments from the debate.
-3. **Refine the Trader's Plan**: Start with the trader's original plan, **{trader_plan}**, and adjust it based on the analysts' insights.
-4. **Learn from Past Mistakes**: Use lessons from **{past_memory_str}** to address prior misjudgments and improve the decision you are making now to make sure you don't make a wrong BUY/SELL/HOLD call that loses money.
+        # Adjust based on original confidence (example)
+        original_confidence = original_trade_proposal.get("confidence_score", 0.5)
+        if original_confidence < 0.6:
+            risk_score = min(1.0, risk_score + 0.1) # Slightly increase risk for low confidence proposals
 
-Deliverables:
-- A clear and actionable recommendation: Buy, Sell, or Hold.
-- Detailed reasoning anchored in the debate and past reflections.
+        proceed = True
+        if risk_score > 0.65: # Adjusted threshold
+            proceed = False
 
----
+        assessment_summary = (
+            f"Synthesized risk for {original_trade_proposal.get('pair')} {original_trade_proposal.get('side')}: "
+            f"Overall risk score is {risk_score:.2f}. "
+            f"Aggressive: '{aggressive_analysis[:50]}...'. Neutral: '{neutral_analysis[:50]}...'. Conservative: '{conservative_analysis[:50]}...'. "
+            f"Decision to proceed: {proceed}."
+        )
 
-**Analysts Debate History:**  
-{history}
+        # Example modification: if risk is medium-high, suggest reducing size by 20%
+        # If risk is very high, suggest reducing by 50% or not proceeding.
+        size_factor = 1.0
+        if risk_score > 0.6:
+            size_factor = 0.5
+        elif risk_score > 0.4:
+            size_factor = 0.8
 
----
-
-Focus on actionable insights and continuous improvement. Build on past lessons, critically evaluate all perspectives, and ensure each decision advances better outcomes."""
-
-        response = llm.invoke(prompt)
-
-        new_risk_debate_state = {
-            "judge_decision": response.content,
-            "history": risk_debate_state["history"],
-            "risky_history": risk_debate_state["risky_history"],
-            "safe_history": risk_debate_state["safe_history"],
-            "neutral_history": risk_debate_state["neutral_history"],
-            "latest_speaker": "Judge",
-            "current_risky_response": risk_debate_state["current_risky_response"],
-            "current_safe_response": risk_debate_state["current_safe_response"],
-            "current_neutral_response": risk_debate_state["current_neutral_response"],
-            "count": risk_debate_state["count"],
+        judgment = {
+            "risk_score": round(risk_score, 2),
+            "assessment_summary": assessment_summary,
+            "recommended_modifications": {
+                "sl": None,
+                "tp": None,
+                "size_factor": size_factor
+            },
+            "proceed_with_trade": proceed
         }
 
-        return {
-            "risk_debate_state": new_risk_debate_state,
-            "final_trade_decision": response.content,
-        }
+        print(f"RiskManager generated judgment: {judgment}")
 
-    return risk_manager_node
+        # This would be the final output for this specific trade proposal's risk assessment
+        # The TradeMetaAgent would then use this.
+        return {"risk_manager_judgment": judgment}
+
+    return judge_trade_risk
