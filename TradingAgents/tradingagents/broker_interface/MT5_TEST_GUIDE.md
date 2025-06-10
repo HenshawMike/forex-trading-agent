@@ -133,6 +133,93 @@ if __name__ == "__main__":
 
 ```
 
+### Testing Mock Implementations of Other Broker Methods
+
+The `MT5Broker.py` script now includes mock/placeholder implementations for the following methods:
+
+*   `get_account_info()`
+*   `get_current_price(pair)`
+*   `place_order(order_details)`
+*   `modify_order(order_id, new_params)`
+*   `close_order(order_id, size_to_close)`
+*   `get_open_positions()`
+*   `get_pending_orders()`
+
+When you run the test script provided below (or your own test script) *without uncommenting the actual MetaTrader 5 API calls within these methods*, they will return predefined mock data or simulate actions (like adding to an in-memory list of open positions for `place_order` and `get_open_positions`).
+
+You can extend the test script to call these methods and observe their mock behavior. For example, after a successful connection:
+
+```python
+# Example additions to the test script:
+# ... (after successful connection, but ensure MT5 live calls in broker methods are commented out for pure mock testing) ...
+
+# Test get_account_info (mocked)
+print("\nFetching mock account info...")
+# Ensure connect was called with some credentials for mock to use them
+if not broker._connected: # If previous connection failed, try a mock connect
+    print("Attempting mock connect for further tests...")
+    broker.connect({"login": 12345, "password": "password", "server": "TestServer"})
+
+mock_acc_info = broker.get_account_info()
+if mock_acc_info:
+    print(f"Mock Account Info: Login: {mock_acc_info.get('login')}, Balance: {mock_acc_info.get('balance')}")
+
+# Test get_current_price (mocked)
+print("\nFetching mock current price for GBPUSD...")
+mock_gbpusd_price = broker.get_current_price("GBPUSD")
+if mock_gbpusd_price:
+    print(f"Mock GBPUSD: Bid: {mock_gbpusd_price.get('bid')}, Ask: {mock_gbpusd_price.get('ask')}")
+
+# Test place_order (simulated - adds to internal list)
+print("\nSimulating placing a market order for EURCAD...")
+order_details_eurcad = {
+    "pair": "EUR/CAD", "type": "market", "side": "buy",
+    "size": 0.02, "sl": 1.4500, "tp": 1.4600,
+    "comment": "Test mock EURCAD buy"
+}
+sim_order_result = broker.place_order(order_details_eurcad)
+if sim_order_result and sim_order_result.get("success"):
+    print(f"Simulated order placement success: ID {sim_order_result.get('order_id')}")
+
+    # Test get_open_positions (simulated - should show the EURCAD order)
+    print("\nFetching simulated open positions...")
+    sim_positions = broker.get_open_positions()
+    if sim_positions is not None:
+        print(f"Simulated Open Positions ({len(sim_positions)}):")
+        for pos in sim_positions:
+            print(f"  ID: {pos.get('id')}, Pair: {pos.get('pair')}, Size: {pos.get('size')}, Open Price: {pos.get('open_price')}")
+
+    # Test modify_order (simulated)
+    if sim_positions:
+        pos_to_modify_id = sim_positions[0].get("id")
+        print(f"\nSimulating modifying position {pos_to_modify_id}...")
+        modify_result = broker.modify_order(pos_to_modify_id, {"sl": 1.4450, "tp": 1.4650})
+        if modify_result and modify_result.get("success"):
+            print(f"Simulated modification success for {pos_to_modify_id}.")
+            # Optionally re-fetch and print to see changes if your mock updates the list by reference
+            # updated_pos = broker.get_open_positions() ... print ...
+
+    # Test close_order (simulated - should remove from internal list)
+    if sim_positions: # Re-check as it might have been cleared by other tests if run multiple times
+        pos_to_close_id = sim_positions[0].get("id") # Could be the modified one or original
+        print(f"\nSimulating closing position {pos_to_close_id}...")
+        close_result = broker.close_order(pos_to_close_id)
+        if close_result and close_result.get("success"):
+            print(f"Simulated close success for {pos_to_close_id}.")
+
+            print("\nFetching simulated open positions (after close)...")
+            sim_positions_after_close = broker.get_open_positions()
+            if sim_positions_after_close is not None:
+                 print(f"Simulated Open Positions ({len(sim_positions_after_close)}): {sim_positions_after_close}")
+
+else:
+    print("Simulated order placement failed or no order ID returned, skipping further mock tests.")
+
+# ... (rest of the original test script, like disconnect) ...
+```
+
+This allows you to verify the mocked behavior before you attempt to connect to a live MT5 terminal and test the actual API calls (by uncommenting the relevant sections in `mt5_broker.py`). The primary purpose of this guide remains to assist with testing the *actual* MT5 connection and API calls.
+
 ## Running the Test
 
 1.  Ensure your MetaTrader 5 terminal is running and logged into the account specified by your environment variables.
