@@ -1,299 +1,199 @@
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, List, Dict, Any, Optional, Union
-import numpy as np
-from datetime import datetime, timezone, timedelta
-import pandas as pd
+from typing import Dict, List, TypedDict, Any, Optional # Corrected import for Optional
+import operator # For StateGraph update operations
 
+from langgraph.graph import StateGraph, END
+
+# Import our new agents and states
 from tradingagents.forex_master.forex_master_agent import ForexMasterAgent
-from tradingagents.forex_meta.trade_meta_agent import TradeMetaAgent
 from tradingagents.forex_agents.day_trader_agent import DayTraderAgent
 from tradingagents.forex_agents.swing_trader_agent import SwingTraderAgent
-from tradingagents.forex_agents.scalper_agent import ScalperAgent
-from tradingagents.forex_agents.position_trader_agent import PositionTraderAgent
-from tradingagents.broker_interface.base import BrokerInterface
-from tradingagents.graph.risk_assessment_graph import RiskAssessmentGraph
+from tradingagents.forex_meta.trade_meta_agent import ForexMetaAgent
+from tradingagents.forex_utils.forex_states import (
+    ForexSubAgentTask,
+    ForexTradeProposal,
+    AggregatedForexProposals,
+    ForexFinalDecision
+)
+import datetime # For default timestamp
 
-class PlaceholderLLM:
-    def invoke(self, prompt: str) -> str:
-        if "Strategic Forex Directive" in str(prompt):
-            mock_directive = {
-                "primary_bias": {"currency": "USD", "direction": "bullish"},
-                "confidence_in_bias": "medium",
-                "preferred_timeframes": ["intraday", "h1"],
-                "volatility_expectation": "moderate",
-                "focus_pairs": ["EUR/USD", "USD/JPY"],
-                "key_narrative": "LLM Mock: USD showing bullish signs, focus on intraday EUR/USD shorts and USD/JPY longs.",
-                "key_levels_to_watch": {"EUR/USD_resistance": 1.0950},
-                "llm_generated": True
-            }
-            import json
-            return json.dumps(mock_directive)
-        return f"LLM invoked with: {prompt[:50]}..."
-
-
-class PlaceholderMemory:
-    def retrieve(self, query: str) -> List[str]:
-        return [f"Memory retrieved for: {query}"]
-    def add_memory(self, text: str, metadata: Optional[Dict] = None) -> None:
-        pass
-    def get_memories(self, query: str, n_matches: int = 2) -> List[Dict[str, Any]]:
-        return [{"recommendation": "Past lesson from PlaceholderMemory: be cautious with high volatility."}]
-
+# Define the State for our Forex graph
 class ForexGraphState(TypedDict):
-    market_outlook: Optional[Dict[str, Any]]
-    user_preferences: Optional[Dict[str, Any]]
-    strategic_directive: Optional[Dict[str, Any]]
-    day_trader_proposals: Optional[List[Dict[str, Any]]]
-    swing_trader_proposals: Optional[List[Dict[str, Any]]]
-    scalper_proposals: Optional[List[Dict[str, Any]]]
-    position_trader_proposals: Optional[List[Dict[str, Any]]]
-    aggregated_proposals: List[Dict[str, Any]]
-    finalized_trades_for_approval: Optional[List[Dict[str, Any]]]
-    portfolio_status: Optional[Dict[str, Any]]
+    currency_pair: str
+    current_simulated_time: str # ISO format string
+
+    # From Master Agent (Initial Processing)
+    sub_agent_tasks: List[ForexSubAgentTask]
+    market_regime: str
+
+    # For collecting proposals from sub-agents
+    # We'll have specific keys for each agent's proposal for simplicity in this skeleton
+    day_trader_proposal: Optional[ForexTradeProposal]
+    swing_trader_proposal: Optional[ForexTradeProposal]
+    # This list will be populated by the master_aggregation_node based on above
+    proposals_from_sub_agents: List[ForexTradeProposal]
+
+    # From Master Agent (Aggregation)
+    aggregated_proposals_for_meta_agent: Optional[AggregatedForexProposals]
+
+    # From Meta Agent
+    forex_final_decision: Optional[ForexFinalDecision]
+
+    # To track errors or issues if any node fails
     error_message: Optional[str]
 
+
 class ForexTradingGraph:
-    def __init__(self, llm_for_sub_agents: Any, broker_interface: BrokerInterface, llm_model_name_for_master: str = "gpt-3.5-turbo", llm_model_name_for_risk: str = "gpt-3.5-turbo"): # Added llm_model_name_for_risk
-        self.llm_for_sub_agents = llm_for_sub_agents
-        self.broker_interface = broker_interface
-        self.llm_model_name_for_master = llm_model_name_for_master # Store it
-        self.llm_model_name_for_risk = llm_model_name_for_risk # Store it
-        shared_memory = PlaceholderMemory()
+    def __init__(self):
+        print("Initializing ForexTradingGraph...")
+        self.master_agent = ForexMasterAgent()
+        self.day_trader_agent = DayTraderAgent()
+        self.swing_trader_agent = SwingTraderAgent()
+        self.meta_agent = ForexMetaAgent()
 
-        self.forex_master_agent = ForexMasterAgent(llm_model_name=self.llm_model_name_for_master, memory=shared_memory)
+        self.graph = self._setup_graph()
+        print("ForexTradingGraph: Graph setup complete.")
 
-        self.day_trader_agent = DayTraderAgent(agent_id="day_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
-        self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
-        self.scalper_agent = ScalperAgent(agent_id="scalper_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
-        self.position_trader_agent = PositionTraderAgent(agent_id="position_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
+    def _setup_graph(self) -> StateGraph:
+        # Define the state merger/updater logic if needed, default is dict.update
+        # For lists like proposals_from_sub_agents, if nodes return partial lists,
+        # a custom merger might be needed. But here, master_aggregation_node creates the full list.
 
-        # RiskAssessmentGraph now gets its own model name config
-        self.risk_assessment_graph_instance = RiskAssessmentGraph(llm_model_name=self.llm_model_name_for_risk, memory_manager=shared_memory)
+        # graph_state_merger = operator.add # Example, not suitable for TypedDict state generally
+        # For TypedDict, the default update mechanism (merging dictionaries) is usually fine
+        # if nodes return dicts with keys corresponding to ForexGraphState fields.
 
-        self.trade_meta_agent = TradeMetaAgent(
-            llm=self.llm_for_sub_agents,
-            memory=shared_memory,
-            risk_assessment_workflow=self.risk_assessment_graph_instance
-        )
-        self.workflow = self._build_graph()
+        builder = StateGraph(ForexGraphState)
 
-    def _build_graph(self) -> StateGraph:
-        graph = StateGraph(ForexGraphState)
+        # Add Nodes
+        builder.add_node("master_initial_processing", self.master_agent.initial_processing_node)
+        builder.add_node("day_trader_processing", self._run_day_trader)
+        builder.add_node("swing_trader_processing", self._run_swing_trader)
+        builder.add_node("master_aggregation", self._run_master_aggregation) # Changed to wrapper
+        builder.add_node("meta_agent_evaluation", self.meta_agent.evaluate_proposals)
 
-        graph.add_node("run_forex_master_agent", self.run_forex_master_agent)
-        graph.add_node("run_day_trader_agent", self.run_day_trader_agent)
-        graph.add_node("run_swing_trader_agent", self.run_swing_trader_agent)
-        graph.add_node("run_scalper_agent", self.run_scalper_agent)
-        graph.add_node("run_position_trader_agent", self.run_position_trader_agent)
-        graph.add_node("aggregate_trading_proposals", self.aggregate_trading_proposals)
-        graph.add_node("run_trade_meta_agent", self.run_trade_meta_agent)
+        # Define Edges
+        builder.set_entry_point("master_initial_processing")
 
-        graph.set_entry_point("run_forex_master_agent")
-        graph.add_edge("run_forex_master_agent", "run_day_trader_agent")
-        graph.add_edge("run_forex_master_agent", "run_swing_trader_agent")
-        graph.add_edge("run_forex_master_agent", "run_scalper_agent")
-        graph.add_edge("run_forex_master_agent", "run_position_trader_agent")
-        graph.add_edge("run_day_trader_agent", "aggregate_trading_proposals")
-        graph.add_edge("run_swing_trader_agent", "aggregate_trading_proposals")
-        graph.add_edge("run_scalper_agent", "aggregate_trading_proposals")
-        graph.add_edge("run_position_trader_agent", "aggregate_trading_proposals")
-        graph.add_edge("aggregate_trading_proposals", "run_trade_meta_agent")
-        graph.add_edge("run_trade_meta_agent", END)
+        # After master_initial_processing, it prepares tasks.
+        # For this skeleton, we'll run Day Trader then Swing Trader sequentially.
+        # A more advanced graph would use conditional edges based on tasks in state["sub_agent_tasks"].
+        builder.add_edge("master_initial_processing", "day_trader_processing")
+        builder.add_edge("day_trader_processing", "swing_trader_processing")
 
-        return graph.compile()
+        # After all relevant sub-agents have run, go to master_aggregation
+        builder.add_edge("swing_trader_processing", "master_aggregation")
 
-    def run_forex_master_agent(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("--- Running Forex Master Agent ---")
-        market_outlook = state.get("market_outlook", {"summary": "Default neutral market outlook."})
-        user_preferences = state.get("user_preferences", {"risk_appetite": "moderate"})
-        directive = self.forex_master_agent.get_strategic_directive(market_outlook, user_preferences)
-        return {"strategic_directive": directive}
+        builder.add_edge("master_aggregation", "meta_agent_evaluation")
 
-    def run_day_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("--- Running Day Trader Agent ---")
-        strategic_directive = state.get("strategic_directive")
-        if not strategic_directive: return {"error_message": "DayTrader: Missing strategic directive."}
-        proposals = self.day_trader_agent.analyze_and_propose_trades(strategic_directive)
-        return {"day_trader_proposals": proposals}
+        # The meta_agent_evaluation is the final step in this simple flow
+        builder.add_edge("meta_agent_evaluation", END)
 
-    def run_swing_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("--- Running Swing Trader Agent ---")
-        strategic_directive = state.get("strategic_directive")
-        if not strategic_directive: return {"error_message": "SwingTrader: Missing strategic directive."}
-        proposals = self.swing_trader_agent.analyze_and_propose_trades(strategic_directive)
-        return {"swing_trader_proposals": proposals}
+        return builder.compile()
 
-    def run_scalper_agent(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("--- Running Scalper Agent ---")
-        strategic_directive = state.get("strategic_directive")
-        if not strategic_directive: return {"scalper_proposals": []}
-        proposals = self.scalper_agent.analyze_and_propose_trades(strategic_directive)
-        return {"scalper_proposals": proposals}
+    def _run_day_trader(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("ForexTradingGraph: Running Day Trader...")
+        # Find the DayTrader task from sub_agent_tasks
+        day_task = None
+        for task in state.get("sub_agent_tasks", []):
+            # This matching is simplistic; real tasks might have agent_type field
+            if "task_day_" in task.get("task_id", ""):
+                day_task = task
+                break
 
-    def run_position_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("--- Running Position Trader Agent ---")
-        strategic_directive = state.get("strategic_directive")
-        if not strategic_directive: return {"error_message": "PositionTrader: Missing strategic directive.", "position_trader_proposals": []}
-        proposals = self.position_trader_agent.analyze_and_propose_trades(strategic_directive)
-        return {"position_trader_proposals": proposals}
+        if day_task:
+            # The agent expects its task under a specific key in a new state dict
+            # It returns a dict like {"day_trader_proposal": ...}
+            # This will be merged into the main graph state by LangGraph
+            # Pass along the whole state as agents might need other info like current_simulated_time
+            return self.day_trader_agent.process_task({"current_day_trader_task": day_task, **state})
+        else:
+            print("ForexTradingGraph: No Day Trader task found.")
+            # Ensure the key is part of the output so StateGraph can merge it.
+            return {"day_trader_proposal": None, "error_message": state.get("error_message")}
 
-    def aggregate_trading_proposals(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("--- Aggregating Trading Proposals ---")
-        all_proposals = []
-        for key in ["day_trader_proposals", "swing_trader_proposals", "scalper_proposals", "position_trader_proposals"]:
-            if state.get(key): all_proposals.extend(state[key]) # type: ignore
-        print(f"Total proposals aggregated: {len(all_proposals)}")
-        return {"aggregated_proposals": all_proposals}
 
-    def run_trade_meta_agent(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("--- Running Trade Meta Agent ---")
-        proposals = state.get("aggregated_proposals", [])
-        strategic_directive = state.get("strategic_directive")
-        portfolio_status = state.get("portfolio_status", {"balance": 10000, "open_positions": 0, "max_concurrent_trades": 1, "risk_per_trade_percentage": 0.01})
-        if not strategic_directive: return {"error_message": "TradeMetaAgent: Missing strategic directive."}
-        final_trades = self.trade_meta_agent.coordinate_trades(proposals, strategic_directive, portfolio_status)
-        return {"finalized_trades_for_approval": final_trades}
+    def _run_swing_trader(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("ForexTradingGraph: Running Swing Trader...")
+        swing_task = None
+        for task in state.get("sub_agent_tasks", []):
+            if "task_swing_" in task.get("task_id", ""):
+                swing_task = task
+                break
 
-    def run(self, initial_state_dict: Dict[str, Any]) -> Dict[str, Any]:
-        print("--- Running Forex Trading Graph ---")
-        graph_input = ForexGraphState(
-            market_outlook=initial_state_dict.get("market_outlook"),
-            user_preferences=initial_state_dict.get("user_preferences"),
-            strategic_directive=None,
-            day_trader_proposals=initial_state_dict.get("day_trader_proposals"),
-            swing_trader_proposals=initial_state_dict.get("swing_trader_proposals"),
-            scalper_proposals=initial_state_dict.get("scalper_proposals"),
-            position_trader_proposals=initial_state_dict.get("position_trader_proposals"),
-            aggregated_proposals=initial_state_dict.get("aggregated_proposals", []),
-            finalized_trades_for_approval=None,
-            portfolio_status=initial_state_dict.get("portfolio_status"),
+        if swing_task:
+            return self.swing_trader_agent.process_task({"current_swing_trader_task": swing_task, **state})
+        else:
+            print("ForexTradingGraph: No Swing Trader task found.")
+            return {"swing_trader_proposal": None, "error_message": state.get("error_message")}
+
+    def _run_master_aggregation(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("ForexTradingGraph: Running Master Aggregation wrapper...")
+
+        current_proposals_list: List[ForexTradeProposal] = []
+        day_proposal = state.get('day_trader_proposal')
+        if day_proposal:
+            current_proposals_list.append(day_proposal)
+
+        swing_proposal = state.get('swing_trader_proposal')
+        if swing_proposal:
+            current_proposals_list.append(swing_proposal)
+
+        # The master_agent.aggregation_node expects the list of proposals under
+        # the 'proposals_from_sub_agents' key in the state dict it receives.
+        aggregation_input_state = state.copy() # Start with a copy of the current state
+        aggregation_input_state["proposals_from_sub_agents"] = current_proposals_list
+
+        # Now call the actual master agent's aggregation node with the prepared state
+        return self.master_agent.aggregation_node(aggregation_input_state)
+
+
+    def invoke_graph(self, currency_pair: str, simulated_time_iso: str) -> Optional[ForexFinalDecision]:
+        print(f"ForexTradingGraph: Invoking graph for {currency_pair} at {simulated_time_iso}")
+        initial_state = ForexGraphState(
+            currency_pair=currency_pair,
+            current_simulated_time=simulated_time_iso,
+            sub_agent_tasks=[],
+            market_regime="Unknown", # Master will assess
+            day_trader_proposal=None,
+            swing_trader_proposal=None,
+            proposals_from_sub_agents=[], # Initialize as empty list
+            aggregated_proposals_for_meta_agent=None,
+            forex_final_decision=None,
             error_message=None
         )
-        final_state = self.workflow.invoke(graph_input)
-        print("--- Forex Trading Graph Run Complete ---")
-        return final_state
 
-if __name__ == "__main__":
-    placeholder_llm_instance = PlaceholderLLM()
+        # Ensure all keys are present in the initial state for TypedDict validation by Langgraph
+        # Even if Optional, they should be explicitly None if not set.
+        # The above initialization handles this correctly for Optional fields.
 
-    class MockBroker(BrokerInterface):
-        def connect(self, credentials): return True
-        def disconnect(self): pass
-        def get_account_info(self): return {"balance": 10000, "currency": "USD", "equity": 10000, "margin": 5000}
-        def get_current_price(self, pair): return {"bid": 1.1, "ask": 1.1002, "time": datetime.now(timezone.utc)}
-        def get_historical_data(self, pair: str, timeframe: str, start_date: Optional[Union[datetime, str]] = None, end_date: Optional[Union[datetime, str]] = None, count: Optional[int] = None) -> Optional[List[Dict[str, Any]]]:
-            num_bars = count if count else 200
-            freq_map = {"M1": "min", "M5": "5min", "M15": "15min", "H1": "h", "H4": "4h", "D1": "D", "W1": "W-MON"}
-            data_freq = freq_map.get(timeframe, "D")
-            end_ts = pd.Timestamp.now(tz='UTC')
-            if end_date: end_ts = pd.to_datetime(end_date, utc=True)
-            if start_date and not end_date and not count:
-                start_ts = pd.to_datetime(start_date, utc=True)
-                time_delta_map = {'min': 60, '5min': 5*60, '15min': 15*60, 'h': 3600, '4h': 4*3600, 'D': 24*3600, 'W-MON': 7*24*3600}
-                num_bars = int((end_ts - start_ts).total_seconds() / time_delta_map.get(data_freq, 24*3600))
-                num_bars = max(num_bars, 50)
-            num_bars = max(num_bars, 50)
-            dates = pd.date_range(end=end_ts, periods=num_bars, freq=data_freq)
-            start_price = np.random.uniform(1.0, 1.5)
-            if "JPY" in pair.upper(): start_price = np.random.uniform(100.0, 180.0)
-            price_changes = np.random.normal(0, 0.001, size=num_bars)
-            if "JPY" in pair.upper(): price_changes = np.random.normal(0, 0.1, size=num_bars)
-            if timeframe in ["M1", "M5", "M15"]:
-                price_changes = np.random.normal(0, 0.0001, size=num_bars)
-                if "JPY" in pair.upper(): price_changes = np.random.normal(0, 0.01, size=num_bars)
-            close_prices = start_price + np.cumsum(price_changes)
-            close_prices = np.maximum(0.01, close_prices)
-            if "JPY" not in pair.upper() and np.min(close_prices) < 0.5: close_prices = np.maximum(0.5, close_prices)
-            open_prices = np.roll(close_prices, 1)
-            open_prices[0] = close_prices[0] - price_changes[0]
-            data_list = []
-            for i in range(num_bars):
-                o, c = open_prices[i], close_prices[i]
-                volatility_factor = 0.0005 * start_price if timeframe not in ["W1", "MN1"] else 0.01 * start_price
-                high = max(o, c) + abs(np.random.normal(0, volatility_factor))
-                low = min(o, c) - abs(np.random.normal(0, volatility_factor))
-                low = max(0.0001, low)
-                data_list.append({"time": dates[i], "open": o, "high": high, "low": low, "close": c, "volume": np.random.randint(100, 10000)})
-            return data_list
-        def place_order(self, order_details): return {"success": True, "order_id": "sim123", "message": "Simulated order placed."}
-        def modify_order(self, order_id, new_params): return {"success": True, "message": "Simulated order modified."}
-        def close_order(self, order_id, size_to_close=None): return {"success": True, "message": "Simulated order closed."}
-        def get_open_positions(self): return []
-        def get_pending_orders(self): return []
+        final_state_dict = self.graph.invoke(initial_state) # LangGraph returns a dict
 
-    mock_broker = MockBroker()
-    forex_graph_instance = ForexTradingGraph(
-        llm_for_sub_agents=placeholder_llm_instance, # For agents not using internal LLM client based on name
-        broker_interface=mock_broker,
-        llm_model_name_for_master="gpt-3.5-turbo", # ForexMasterAgent will use this
-        llm_model_name_for_risk="gpt-3.5-turbo-mock-risk" # RiskAssessmentGraph will pass this to its agents
-    )
+        # Convert dict back to TypedDict for type safety, though it's mostly for static analysis
+        # final_state: ForexGraphState = final_state_dict
+        # No, LangGraph StateGraph already works with TypedDicts if defined.
+        # The output of invoke will match the structure of ForexGraphState.
 
-    initial_run_state = {
-        "market_outlook": {
-            "summary": "Overall market is cautious. USD showed some strength on recent data.",
-            "sentiment": {"USD": "strong_bullish", "EUR": "neutral", "AUD/JPY": "ranging"},
-            "volatility_forecast": "moderate",
-            "key_levels": {"EUR/USD_resistance": 1.0900, "USD/JPY_support": 148.50},
-            "economic_events": ["US CPI next week"]
-        },
-        "user_preferences": {
-            "risk_appetite": "aggressive",
-            "preferred_pairs": ["EUR/USD", "USD/JPY", "GBP/JPY", "AUD/USD"],
-            "trading_style_preference": "day_trader",
-            "disallowed_pairs": ["USD/CAD"]
-        },
-        "portfolio_status": {
-            "balance": 25000, "equity": 25000, "margin_available": 25000,
-            "open_positions": [], "max_concurrent_trades": 3,
-            "risk_per_trade_percentage": 0.01,
-            "mock_current_price": {"EUR/USD": 1.0850, "USD/JPY": 149.50, "GBP/JPY": 189.50, "AUD/USD": 0.6550}
-        }
-    }
+        if final_state_dict.get("error_message"):
+            print(f"Graph execution error: {final_state_dict['error_message']}")
+            return None # Or raise an exception
 
-    final_output_state = forex_graph_instance.run(initial_run_state)
+        print(f"ForexTradingGraph: Graph invocation complete. Final decision: {final_state_dict.get('forex_final_decision')}")
+        return final_state_dict.get("forex_final_decision")
 
-    print("\n--- Final Graph Output (all keys from final state) ---")
-    for key, value in final_output_state.items():
-        if value is not None and (not isinstance(value, list) or value):
-             print(f"{key}: {value}")
+# Example of how this might be run (will be in the test script)
+if __name__ == '__main__':
+    print("Manual test of ForexTradingGraph setup:")
+    forex_graph_instance = ForexTradingGraph()
 
-    print("\n--- Specific check for Strategic Directive ---")
-    strategic_directive_output = final_output_state.get("strategic_directive")
-    if strategic_directive_output:
-        print("Strategic Directive Output:")
-        llm_gen_status = strategic_directive_output.get("llm_generated", False)
-        print(f"  LLM Generated: {llm_gen_status}")
-        for k, v in strategic_directive_output.items():
-            if k != "llm_generated":
-                print(f"    {k}: {v}")
+    # Test invocation
+    # In a real scenario, current_simulated_time would come from the backtester or live environment
+    dummy_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    decision = forex_graph_instance.invoke_graph("EURUSD", dummy_time)
+
+    if decision:
+        print("\n--- Final Decision from Graph ---")
+        # decision is ForexFinalDecision (a TypedDict)
+        for key, value in decision.items(): # Iterate through TypedDict items
+            print(f"{key}: {value}")
     else:
-        print("  Strategic Directive not found in output.")
-
-    for agent_name_key in ["day_trader_proposals", "swing_trader_proposals", "scalper_proposals", "position_trader_proposals"]:
-        print(f"\n--- Specific check for {agent_name_key.replace('_', ' ').title()} ---")
-        proposals = final_output_state.get(agent_name_key)
-        if proposals:
-            print(f"{agent_name_key.replace('_', ' ').title()} ({len(proposals)}):")
-            for proposal_idx, proposal in enumerate(proposals):
-                print(f"  Proposal {proposal_idx + 1}: {proposal.get('pair')} {proposal.get('side')} - Conf: {proposal.get('confidence_score')}")
-        elif proposals == []:
-             print(f"{agent_name_key.replace('_', ' ').title()}: [] (No trades proposed)")
-        else:
-            print(f"{agent_name_key.replace('_', ' ').title()} not found or not run in output.")
-
-    print("\n--- Specific check for Finalized Trades for Approval ---")
-    finalized_trades = final_output_state.get("finalized_trades_for_approval")
-    if finalized_trades:
-        print(f"Finalized Trades for Approval ({len(finalized_trades)}):")
-        for trade_idx, trade in enumerate(finalized_trades):
-            print(f"  Trade {trade_idx + 1}:")
-            for k, v_trade in trade.items():
-                if k == "risk_assessment" and isinstance(v_trade, dict):
-                    print(f"    {k}:")
-                    for ra_k, ra_v in v_trade.items(): print(f"      {ra_k}: {ra_v}")
-                else: print(f"    {k}: {v_trade}")
-    elif finalized_trades == []:
-        print("Finalized Trades for Approval: [] (No trades finalized)")
-    else:
-        print("Finalized Trades for Approval not found in output.")
+        print("\n--- No decision or error in graph ---")
