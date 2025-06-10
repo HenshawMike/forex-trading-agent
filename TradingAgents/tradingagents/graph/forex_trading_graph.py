@@ -4,7 +4,6 @@ import numpy as np
 from datetime import datetime, timezone, timedelta
 import pandas as pd
 
-# Import new Forex agent skeletons
 from tradingagents.forex_master.forex_master_agent import ForexMasterAgent
 from tradingagents.forex_meta.trade_meta_agent import TradeMetaAgent
 from tradingagents.forex_agents.day_trader_agent import DayTraderAgent
@@ -16,7 +15,6 @@ from tradingagents.graph.risk_assessment_graph import RiskAssessmentGraph
 
 class PlaceholderLLM:
     def invoke(self, prompt: str) -> str:
-        # print(f"PlaceholderLLM invoked with prompt starting: {prompt[:100]}...")
         if "Strategic Forex Directive" in str(prompt):
             mock_directive = {
                 "primary_bias": {"currency": "USD", "direction": "bullish"},
@@ -28,9 +26,8 @@ class PlaceholderLLM:
                 "key_levels_to_watch": {"EUR/USD_resistance": 1.0950},
                 "llm_generated": True
             }
-            import json # Ensure json is imported for dumps
+            import json
             return json.dumps(mock_directive)
-        # Other specific mock responses can be added here if needed for other agents
         return f"LLM invoked with: {prompt[:50]}..."
 
 
@@ -56,26 +53,27 @@ class ForexGraphState(TypedDict):
     error_message: Optional[str]
 
 class ForexTradingGraph:
-    def __init__(self, llm_for_sub_agents: Any, broker_interface: BrokerInterface, llm_model_name_for_master: str = "gpt-3.5-turbo"):
+    def __init__(self, llm_for_sub_agents: Any, broker_interface: BrokerInterface, llm_model_name_for_master: str = "gpt-3.5-turbo", llm_model_name_for_risk: str = "gpt-3.5-turbo"): # Added llm_model_name_for_risk
         self.llm_for_sub_agents = llm_for_sub_agents
         self.broker_interface = broker_interface
+        self.llm_model_name_for_master = llm_model_name_for_master # Store it
+        self.llm_model_name_for_risk = llm_model_name_for_risk # Store it
         shared_memory = PlaceholderMemory()
 
-        # ForexMasterAgent now initializes its own LLM client internally based on llm_model_name_for_master
-        self.forex_master_agent = ForexMasterAgent(llm_model_name=llm_model_name_for_master, memory=shared_memory)
+        self.forex_master_agent = ForexMasterAgent(llm_model_name=self.llm_model_name_for_master, memory=shared_memory)
 
-        # Other agents use the passed-in LLM (PlaceholderLLM for tests)
         self.day_trader_agent = DayTraderAgent(agent_id="day_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
         self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
         self.scalper_agent = ScalperAgent(agent_id="scalper_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
         self.position_trader_agent = PositionTraderAgent(agent_id="position_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
 
-        self.risk_assessment_graph_instance = RiskAssessmentGraph(llm=self.llm_for_sub_agents, memory_manager=shared_memory)
+        # RiskAssessmentGraph now gets its own model name config
+        self.risk_assessment_graph_instance = RiskAssessmentGraph(llm_model_name=self.llm_model_name_for_risk, memory_manager=shared_memory)
 
         self.trade_meta_agent = TradeMetaAgent(
             llm=self.llm_for_sub_agents,
             memory=shared_memory,
-            risk_assessment_workflow=self.risk_assessment_graph_instance # Pass the graph instance
+            risk_assessment_workflow=self.risk_assessment_graph_instance
         )
         self.workflow = self._build_graph()
 
@@ -91,17 +89,14 @@ class ForexTradingGraph:
         graph.add_node("run_trade_meta_agent", self.run_trade_meta_agent)
 
         graph.set_entry_point("run_forex_master_agent")
-
         graph.add_edge("run_forex_master_agent", "run_day_trader_agent")
         graph.add_edge("run_forex_master_agent", "run_swing_trader_agent")
         graph.add_edge("run_forex_master_agent", "run_scalper_agent")
         graph.add_edge("run_forex_master_agent", "run_position_trader_agent")
-
         graph.add_edge("run_day_trader_agent", "aggregate_trading_proposals")
         graph.add_edge("run_swing_trader_agent", "aggregate_trading_proposals")
         graph.add_edge("run_scalper_agent", "aggregate_trading_proposals")
         graph.add_edge("run_position_trader_agent", "aggregate_trading_proposals")
-
         graph.add_edge("aggregate_trading_proposals", "run_trade_meta_agent")
         graph.add_edge("run_trade_meta_agent", END)
 
@@ -117,52 +112,36 @@ class ForexTradingGraph:
     def run_day_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
         print("--- Running Day Trader Agent ---")
         strategic_directive = state.get("strategic_directive")
-        if not strategic_directive:
-            return {"error_message": "DayTrader: Missing strategic directive."}
+        if not strategic_directive: return {"error_message": "DayTrader: Missing strategic directive."}
         proposals = self.day_trader_agent.analyze_and_propose_trades(strategic_directive)
         return {"day_trader_proposals": proposals}
 
     def run_swing_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
         print("--- Running Swing Trader Agent ---")
         strategic_directive = state.get("strategic_directive")
-        if not strategic_directive:
-            return {"error_message": "SwingTrader: Missing strategic directive."}
+        if not strategic_directive: return {"error_message": "SwingTrader: Missing strategic directive."}
         proposals = self.swing_trader_agent.analyze_and_propose_trades(strategic_directive)
         return {"swing_trader_proposals": proposals}
 
     def run_scalper_agent(self, state: ForexGraphState) -> Dict[str, Any]:
         print("--- Running Scalper Agent ---")
         strategic_directive = state.get("strategic_directive")
-        if not strategic_directive:
-            print("ScalperAgent: Warning - Missing strategic directive.")
-            return {"scalper_proposals": []}
+        if not strategic_directive: return {"scalper_proposals": []}
         proposals = self.scalper_agent.analyze_and_propose_trades(strategic_directive)
         return {"scalper_proposals": proposals}
 
     def run_position_trader_agent(self, state: ForexGraphState) -> Dict[str, Any]:
         print("--- Running Position Trader Agent ---")
         strategic_directive = state.get("strategic_directive")
-        if not strategic_directive:
-            print("PositionTraderAgent: Error - Missing strategic directive.")
-            return {"error_message": "PositionTrader: Missing strategic directive.", "position_trader_proposals": []}
+        if not strategic_directive: return {"error_message": "PositionTrader: Missing strategic directive.", "position_trader_proposals": []}
         proposals = self.position_trader_agent.analyze_and_propose_trades(strategic_directive)
         return {"position_trader_proposals": proposals}
 
     def aggregate_trading_proposals(self, state: ForexGraphState) -> Dict[str, Any]:
         print("--- Aggregating Trading Proposals ---")
         all_proposals = []
-        day_proposals = state.get("day_trader_proposals")
-        if day_proposals is not None: all_proposals.extend(day_proposals)
-
-        swing_proposals = state.get("swing_trader_proposals")
-        if swing_proposals is not None: all_proposals.extend(swing_proposals)
-
-        scalper_proposals = state.get("scalper_proposals")
-        if scalper_proposals is not None: all_proposals.extend(scalper_proposals)
-
-        position_trader_proposals = state.get("position_trader_proposals")
-        if position_trader_proposals is not None: all_proposals.extend(position_trader_proposals)
-
+        for key in ["day_trader_proposals", "swing_trader_proposals", "scalper_proposals", "position_trader_proposals"]:
+            if state.get(key): all_proposals.extend(state[key]) # type: ignore
         print(f"Total proposals aggregated: {len(all_proposals)}")
         return {"aggregated_proposals": all_proposals}
 
@@ -171,8 +150,7 @@ class ForexTradingGraph:
         proposals = state.get("aggregated_proposals", [])
         strategic_directive = state.get("strategic_directive")
         portfolio_status = state.get("portfolio_status", {"balance": 10000, "open_positions": 0, "max_concurrent_trades": 1, "risk_per_trade_percentage": 0.01})
-        if not strategic_directive:
-            return {"error_message": "TradeMetaAgent: Missing strategic directive."}
+        if not strategic_directive: return {"error_message": "TradeMetaAgent: Missing strategic directive."}
         final_trades = self.trade_meta_agent.coordinate_trades(proposals, strategic_directive, portfolio_status)
         return {"finalized_trades_for_approval": final_trades}
 
@@ -191,25 +169,22 @@ class ForexTradingGraph:
             portfolio_status=initial_state_dict.get("portfolio_status"),
             error_message=None
         )
-
         final_state = self.workflow.invoke(graph_input)
         print("--- Forex Trading Graph Run Complete ---")
         return final_state
 
 if __name__ == "__main__":
-    placeholder_llm_for_sub_agents_and_risk = PlaceholderLLM()
+    placeholder_llm_instance = PlaceholderLLM()
 
     class MockBroker(BrokerInterface):
         def connect(self, credentials): return True
         def disconnect(self): pass
         def get_account_info(self): return {"balance": 10000, "currency": "USD", "equity": 10000, "margin": 5000}
         def get_current_price(self, pair): return {"bid": 1.1, "ask": 1.1002, "time": datetime.now(timezone.utc)}
-
         def get_historical_data(self, pair: str, timeframe: str, start_date: Optional[Union[datetime, str]] = None, end_date: Optional[Union[datetime, str]] = None, count: Optional[int] = None) -> Optional[List[Dict[str, Any]]]:
             num_bars = count if count else 200
             freq_map = {"M1": "min", "M5": "5min", "M15": "15min", "H1": "h", "H4": "4h", "D1": "D", "W1": "W-MON"}
             data_freq = freq_map.get(timeframe, "D")
-
             end_ts = pd.Timestamp.now(tz='UTC')
             if end_date: end_ts = pd.to_datetime(end_date, utc=True)
             if start_date and not end_date and not count:
@@ -240,7 +215,6 @@ if __name__ == "__main__":
                 low = max(0.0001, low)
                 data_list.append({"time": dates[i], "open": o, "high": high, "low": low, "close": c, "volume": np.random.randint(100, 10000)})
             return data_list
-
         def place_order(self, order_details): return {"success": True, "order_id": "sim123", "message": "Simulated order placed."}
         def modify_order(self, order_id, new_params): return {"success": True, "message": "Simulated order modified."}
         def close_order(self, order_id, size_to_close=None): return {"success": True, "message": "Simulated order closed."}
@@ -248,11 +222,12 @@ if __name__ == "__main__":
         def get_pending_orders(self): return []
 
     mock_broker = MockBroker()
-    # Pass the placeholder LLM for sub-agents; ForexMasterAgent will use its internal default or fallback
-    # The first 'llm' parameter in ForexTradingGraph is now 'llm_for_sub_agents'
-    forex_graph_instance = ForexTradingGraph(llm_for_sub_agents=placeholder_llm_for_sub_agents_and_risk,
-                                             broker_interface=mock_broker,
-                                             llm_model_name_for_master="gpt-3.5-turbo") # Explicitly pass for master
+    forex_graph_instance = ForexTradingGraph(
+        llm_for_sub_agents=placeholder_llm_instance, # For agents not using internal LLM client based on name
+        broker_interface=mock_broker,
+        llm_model_name_for_master="gpt-3.5-turbo", # ForexMasterAgent will use this
+        llm_model_name_for_risk="gpt-3.5-turbo-mock-risk" # RiskAssessmentGraph will pass this to its agents
+    )
 
     initial_run_state = {
         "market_outlook": {
@@ -287,11 +262,10 @@ if __name__ == "__main__":
     strategic_directive_output = final_output_state.get("strategic_directive")
     if strategic_directive_output:
         print("Strategic Directive Output:")
-        # Check if the directive itself indicates LLM generation
         llm_gen_status = strategic_directive_output.get("llm_generated", False)
         print(f"  LLM Generated: {llm_gen_status}")
         for k, v in strategic_directive_output.items():
-            if k != "llm_generated": # Don't print the flag again here
+            if k != "llm_generated":
                 print(f"    {k}: {v}")
     else:
         print("  Strategic Directive not found in output.")
