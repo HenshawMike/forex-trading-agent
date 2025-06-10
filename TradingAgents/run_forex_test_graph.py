@@ -17,6 +17,7 @@ sys.path.insert(0, project_root)
 
 try:
     from tradingagents.graph.forex_trading_graph import ForexTradingGraph
+    from tradingagents.broker_interface.simulated_broker import SimulatedBroker # Import
     from tradingagents.forex_utils.forex_states import ForexFinalDecision # For type hinting if needed
 except ImportError as e:
     print(f"ImportError: {e}. Please ensure that the TradingAgents package is correctly structured")
@@ -27,27 +28,37 @@ except ImportError as e:
 def main():
     print("--- Starting Forex Trading Graph Test Script ---")
 
-    # Initialize the graph
-    try:
-        forex_graph_instance = ForexTradingGraph()
-    except Exception as e:
-        print(f"Error initializing ForexTradingGraph: {e}")
-        return
+    # Instantiate SimulatedBroker
+    sim_broker = SimulatedBroker()
 
     # Define sample inputs
     currency_pair_to_test = "EURUSD"
-    # Use a fixed dummy time for repeatable tests, or current time for dynamic tests
-    # simulated_time_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
     simulated_time_iso = "2023-10-27T10:00:00+00:00" # Fixed dummy ISO time
+
+    # Update the simulated broker's current time to match the test time
+    # This is important for get_current_price and get_historical_data in the sim broker
+    simulated_dt_obj = datetime.datetime.fromisoformat(simulated_time_iso.replace('Z', '+00:00'))
+    sim_broker.update_current_time(simulated_dt_obj.timestamp())
+
+
+    # Initialize the graph, passing the broker
+    try:
+        forex_graph_instance = ForexTradingGraph(broker=sim_broker) # Pass broker
+    except Exception as e:
+        print(f"Error initializing ForexTradingGraph: {e}")
+        return
 
     print(f"\nInvoking graph for: {currency_pair_to_test} at {simulated_time_iso}")
 
     # Invoke the graph
     try:
-        final_decision: ForexFinalDecision = forex_graph_instance.invoke_graph(
+        # The type hint ForexFinalDecision might need to be Optional if invoke_graph can return None on error
+        final_decision_obj: Optional[ForexFinalDecision] = forex_graph_instance.invoke_graph(
             currency_pair_to_test,
             simulated_time_iso
         )
+        # For pretty print, it's fine if it's None, the check `if final_decision_obj:` handles it
+        final_decision = final_decision_obj
     except Exception as e:
         print(f"Error invoking ForexTradingGraph: {e}")
         # Potentially print more detailed traceback if in debug mode
@@ -57,10 +68,10 @@ def main():
 
     print("\n--- Forex Graph Execution Complete ---")
 
-    if final_decision:
+    if final_decision: # final_decision is now final_decision_obj
         print("\n=== Final Decision Received ===")
         # Pretty print the TypedDict
-        for key, value in final_decision.items():
+        for key, value in final_decision.items(): # Use final_decision here as it's the one for printing
             if isinstance(value, list) and value: # If it's a list of proposals
                 print(f"  {key}:")
                 for item in value:
@@ -68,7 +79,7 @@ def main():
                         print(f"    - {item}")
                     else:
                         print(f"    - {item}")
-            elif isinstance(value, dict) and value:
+            elif isinstance(value, dict) and value: # If it's a dictionary (like supporting_data)
                  print(f"  {key}:")
                  for sub_key, sub_value in value.items():
                       print(f"    {sub_key}: {sub_value}")

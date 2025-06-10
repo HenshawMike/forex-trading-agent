@@ -3,6 +3,7 @@ import operator # For StateGraph update operations
 
 from langgraph.graph import StateGraph, END
 
+from tradingagents.broker_interface.base import BrokerInterface
 # Import our new agents and states
 from tradingagents.forex_master.forex_master_agent import ForexMasterAgent
 from tradingagents.forex_agents.day_trader_agent import DayTraderAgent
@@ -43,11 +44,13 @@ class ForexGraphState(TypedDict):
 
 
 class ForexTradingGraph:
-    def __init__(self):
+    def __init__(self, broker: BrokerInterface): # Added broker argument
         print("Initializing ForexTradingGraph...")
+        self.broker = broker # Store the broker
         self.master_agent = ForexMasterAgent()
-        self.day_trader_agent = DayTraderAgent()
-        self.swing_trader_agent = SwingTraderAgent()
+        # Pass broker to agents that need it
+        self.day_trader_agent = DayTraderAgent(broker=self.broker)
+        self.swing_trader_agent = SwingTraderAgent(broker=self.broker) # Assuming SwingTrader will also need it
         self.meta_agent = ForexMetaAgent()
 
         self.graph = self._setup_graph()
@@ -183,17 +186,26 @@ class ForexTradingGraph:
 # Example of how this might be run (will be in the test script)
 if __name__ == '__main__':
     print("Manual test of ForexTradingGraph setup:")
-    forex_graph_instance = ForexTradingGraph()
+    # Import and instantiate the dummy/simulated broker
+    from tradingagents.broker_interface.simulated_broker import SimulatedBroker
 
-    # Test invocation
-    # In a real scenario, current_simulated_time would come from the backtester or live environment
-    dummy_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    decision = forex_graph_instance.invoke_graph("EURUSD", dummy_time)
+    sim_broker = SimulatedBroker()
+    # IMPORTANT: Update current time in sim_broker for testing get_current_price & get_historical_data
+    # Use a fixed time for repeatable direct tests, or now() for dynamic.
+    # Using a fixed time similar to what run_forex_test_graph.py might use.
+    test_time_dt = datetime.datetime(2023, 10, 27, 10, 0, 0, tzinfo=datetime.timezone.utc)
+    sim_broker.update_current_time(test_time_dt.timestamp())
+
+    forex_graph_instance = ForexTradingGraph(broker=sim_broker) # Pass broker
+
+    # Test invocation using the same fixed time for consistency in this direct test
+    dummy_time_iso = test_time_dt.isoformat()
+    decision = forex_graph_instance.invoke_graph("EURUSD", dummy_time_iso)
 
     if decision:
-        print("\n--- Final Decision from Graph ---")
+        print("\n--- Final Decision from Graph (forex_trading_graph.py direct run) ---")
         # decision is ForexFinalDecision (a TypedDict)
         for key, value in decision.items(): # Iterate through TypedDict items
             print(f"{key}: {value}")
     else:
-        print("\n--- No decision or error in graph ---")
+        print("\n--- No decision or error in graph (forex_trading_graph.py direct run) ---")
