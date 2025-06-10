@@ -62,7 +62,12 @@ class ForexTradingGraph:
 
         self.forex_master_agent = ForexMasterAgent(llm_model_name=self.llm_model_name_for_master, memory=shared_memory)
 
-        self.day_trader_agent = DayTraderAgent(agent_id="day_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
+        self.day_trader_agent = DayTraderAgent(
+            agent_id="day_trader_main",
+            llm_model_name="gpt-3.5-turbo", # Or your preferred default
+            memory=shared_memory,
+            broker_interface=self.broker_interface
+        )
         self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
         self.scalper_agent = ScalperAgent(agent_id="scalper_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
         self.position_trader_agent = PositionTraderAgent(agent_id="position_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
@@ -270,13 +275,32 @@ if __name__ == "__main__":
     else:
         print("  Strategic Directive not found in output.")
 
-    for agent_name_key in ["day_trader_proposals", "swing_trader_proposals", "scalper_proposals", "position_trader_proposals"]:
+    # Specific handling for DayTraderAgent proposals to show llm_generated_proposal flag
+    print("\n--- Specific check for Day Trader Proposals ---")
+    day_trader_proposals = final_output_state.get("day_trader_proposals")
+    if day_trader_proposals:
+        print(f"Day Trader Proposals ({len(day_trader_proposals)}):")
+        for proposal_idx, proposal in enumerate(day_trader_proposals):
+            print(f"  Proposal {proposal_idx + 1}:")
+            for k, v in proposal.items():
+                if k == "llm_generated_proposal": # Specifically highlight this flag
+                    print(f"    {k}: {v} <--- LLM Status")
+                else:
+                    print(f"    {k}: {v}")
+    elif day_trader_proposals == []: # Explicitly check for empty list
+            print("Day Trader Proposals: [] (No trades proposed by DayTraderAgent)")
+    else:
+        print("Day Trader Proposals not found or DayTraderAgent did not run.")
+
+    # Handling for other agents (SwingTrader, Scalper, PositionTrader)
+    for agent_name_key in ["swing_trader_proposals", "scalper_proposals", "position_trader_proposals"]:
         print(f"\n--- Specific check for {agent_name_key.replace('_', ' ').title()} ---")
         proposals = final_output_state.get(agent_name_key)
         if proposals:
             print(f"{agent_name_key.replace('_', ' ').title()} ({len(proposals)}):")
             for proposal_idx, proposal in enumerate(proposals):
-                print(f"  Proposal {proposal_idx + 1}: {proposal.get('pair')} {proposal.get('side')} - Conf: {proposal.get('confidence_score')}")
+                # Generic print for these agents, can be expanded if they also get llm_generated_proposal
+                print(f"  Proposal {proposal_idx + 1}: {proposal.get('pair')} {proposal.get('side')} - Conf: {proposal.get('confidence_score')}, Rationale: {proposal.get('rationale', 'N/A')[:50]}...")
         elif proposals == []:
              print(f"{agent_name_key.replace('_', ' ').title()}: [] (No trades proposed)")
         else:
