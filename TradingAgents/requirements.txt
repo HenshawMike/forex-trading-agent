@@ -25,3 +25,4 @@ questionary
 MetaTrader5
 Flask
 Flask-CORS
+openai>=1.0

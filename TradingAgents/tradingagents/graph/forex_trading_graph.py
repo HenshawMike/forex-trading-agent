@@ -1,9 +1,10 @@
 from langgraph.graph import StateGraph, END
-from typing import TypedDict, List, Dict, Any, Optional, Union # Ensured Union is here
+from typing import TypedDict, List, Dict, Any, Optional, Union
 import numpy as np
 from datetime import datetime, timezone, timedelta
 import pandas as pd
 
+# Import new Forex agent skeletons
 from tradingagents.forex_master.forex_master_agent import ForexMasterAgent
 from tradingagents.forex_meta.trade_meta_agent import TradeMetaAgent
 from tradingagents.forex_agents.day_trader_agent import DayTraderAgent
@@ -15,27 +16,23 @@ from tradingagents.graph.risk_assessment_graph import RiskAssessmentGraph
 
 class PlaceholderLLM:
     def invoke(self, prompt: str) -> str:
-        if "ForexMasterAgent" in prompt:
-            return f"LLM invoked for MasterAgent: {prompt[:50]}... Directive: Bullish EUR/USD"
-        elif "DayTraderAgent" in prompt:
-            return f"LLM invoked for DayTrader: {prompt[:50]}... Proposal: Buy EUR/USD"
-        elif "SwingTraderAgent" in prompt:
-            return f"LLM invoked for SwingTrader: {prompt[:50]}... Proposal: Sell GBP/JPY"
-        elif "ScalperAgent" in prompt:
-            return f"LLM invoked for Scalper: {prompt[:50]}... Proposal: Buy USD/CHF"
-        elif "PositionTraderAgent" in prompt:
-            return f"LLM invoked for PositionTrader: {prompt[:50]}... Proposal: Buy AUD/NZD"
-        elif "TradeMetaAgent" in prompt:
-            return f"LLM invoked for MetaAgent: {prompt[:50]}... Evaluating proposals"
-        elif "Aggressive take" in prompt or "Risky Risk Analyst" in prompt :
-             return "Mock LLM (Risk): Aggressive: Looks like a winner, risks are minimal!"
-        elif "Conservative view" in prompt or "Safe/Conservative Risk Analyst" in prompt:
-             return "Mock LLM (Risk): Conservative: Too risky, potential for significant loss."
-        elif "Neutral assessment" in prompt or "Neutral Risk Analyst" in prompt:
-             return "Mock LLM (Risk): Neutral: Pros and cons are balanced, exercise caution."
-        elif "Risk Management Judge" in prompt:
-             return "Mock LLM (Risk): Risk Judge: Synthesizing all views for final risk call."
+        # print(f"PlaceholderLLM invoked with prompt starting: {prompt[:100]}...")
+        if "Strategic Forex Directive" in str(prompt):
+            mock_directive = {
+                "primary_bias": {"currency": "USD", "direction": "bullish"},
+                "confidence_in_bias": "medium",
+                "preferred_timeframes": ["intraday", "h1"],
+                "volatility_expectation": "moderate",
+                "focus_pairs": ["EUR/USD", "USD/JPY"],
+                "key_narrative": "LLM Mock: USD showing bullish signs, focus on intraday EUR/USD shorts and USD/JPY longs.",
+                "key_levels_to_watch": {"EUR/USD_resistance": 1.0950},
+                "llm_generated": True
+            }
+            import json # Ensure json is imported for dumps
+            return json.dumps(mock_directive)
+        # Other specific mock responses can be added here if needed for other agents
         return f"LLM invoked with: {prompt[:50]}..."
+
 
 class PlaceholderMemory:
     def retrieve(self, query: str) -> List[str]:
@@ -59,22 +56,26 @@ class ForexGraphState(TypedDict):
     error_message: Optional[str]
 
 class ForexTradingGraph:
-    def __init__(self, llm: Any, broker_interface: BrokerInterface):
-        self.llm = llm
+    def __init__(self, llm_for_sub_agents: Any, broker_interface: BrokerInterface, llm_model_name_for_master: str = "gpt-3.5-turbo"):
+        self.llm_for_sub_agents = llm_for_sub_agents
         self.broker_interface = broker_interface
         shared_memory = PlaceholderMemory()
 
-        self.forex_master_agent = ForexMasterAgent(llm=self.llm, memory=shared_memory)
-        self.day_trader_agent = DayTraderAgent(agent_id="day_trader_main", llm=self.llm, memory=shared_memory, broker_interface=self.broker_interface)
-        self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_main", llm=self.llm, memory=shared_memory, broker_interface=self.broker_interface)
-        self.scalper_agent = ScalperAgent(agent_id="scalper_main", llm=self.llm, memory=shared_memory, broker_interface=self.broker_interface)
-        self.position_trader_agent = PositionTraderAgent(agent_id="position_trader_main", llm=self.llm, memory=shared_memory, broker_interface=self.broker_interface)
+        # ForexMasterAgent now initializes its own LLM client internally based on llm_model_name_for_master
+        self.forex_master_agent = ForexMasterAgent(llm_model_name=llm_model_name_for_master, memory=shared_memory)
 
-        self.risk_assessment_graph_instance = RiskAssessmentGraph(llm=self.llm, memory_manager=shared_memory)
+        # Other agents use the passed-in LLM (PlaceholderLLM for tests)
+        self.day_trader_agent = DayTraderAgent(agent_id="day_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
+        self.swing_trader_agent = SwingTraderAgent(agent_id="swing_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
+        self.scalper_agent = ScalperAgent(agent_id="scalper_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
+        self.position_trader_agent = PositionTraderAgent(agent_id="position_trader_main", llm=self.llm_for_sub_agents, memory=shared_memory, broker_interface=self.broker_interface)
+
+        self.risk_assessment_graph_instance = RiskAssessmentGraph(llm=self.llm_for_sub_agents, memory_manager=shared_memory)
+
         self.trade_meta_agent = TradeMetaAgent(
-            llm=self.llm,
+            llm=self.llm_for_sub_agents,
             memory=shared_memory,
-            risk_assessment_workflow=self.risk_assessment_graph_instance
+            risk_assessment_workflow=self.risk_assessment_graph_instance # Pass the graph instance
         )
         self.workflow = self._build_graph()
 
@@ -196,7 +197,7 @@ class ForexTradingGraph:
         return final_state
 
 if __name__ == "__main__":
-    mock_llm = PlaceholderLLM()
+    placeholder_llm_for_sub_agents_and_risk = PlaceholderLLM()
 
     class MockBroker(BrokerInterface):
         def connect(self, credentials): return True
@@ -206,48 +207,30 @@ if __name__ == "__main__":
 
         def get_historical_data(self, pair: str, timeframe: str, start_date: Optional[Union[datetime, str]] = None, end_date: Optional[Union[datetime, str]] = None, count: Optional[int] = None) -> Optional[List[Dict[str, Any]]]:
             num_bars = count if count else 200
-
-            freq_map = {"M1": "min", "M5": "5min", "M15": "15min", "H1": "h", "H4": "4h", "D1": "D", "W1": "W-MON"} # Corrected T to min, H to h
+            freq_map = {"M1": "min", "M5": "5min", "M15": "15min", "H1": "h", "H4": "4h", "D1": "D", "W1": "W-MON"}
             data_freq = freq_map.get(timeframe, "D")
 
             end_ts = pd.Timestamp.now(tz='UTC')
-            if end_date:
-                end_ts = pd.to_datetime(end_date, utc=True)
-
+            if end_date: end_ts = pd.to_datetime(end_date, utc=True)
             if start_date and not end_date and not count:
                 start_ts = pd.to_datetime(start_date, utc=True)
-                # This logic for calculating num_bars from date range is approximate
-                if data_freq == 'min': num_bars = int((end_ts - start_ts).total_seconds() / 60)
-                elif data_freq == '5min': num_bars = int((end_ts - start_ts).total_seconds() / (5*60))
-                elif data_freq == '15min': num_bars = int((end_ts - start_ts).total_seconds() / (15*60))
-                elif data_freq == 'h': num_bars = int((end_ts - start_ts).total_seconds() / 3600)
-                elif data_freq == '4h': num_bars = int((end_ts - start_ts).total_seconds() / (4*3600))
-                elif data_freq == 'D': num_bars = (end_ts - start_ts).days
-                elif data_freq == 'W-MON': num_bars = (end_ts - start_ts).days // 7
-                else: num_bars = (end_ts - start_ts).days
+                time_delta_map = {'min': 60, '5min': 5*60, '15min': 15*60, 'h': 3600, '4h': 4*3600, 'D': 24*3600, 'W-MON': 7*24*3600}
+                num_bars = int((end_ts - start_ts).total_seconds() / time_delta_map.get(data_freq, 24*3600))
                 num_bars = max(num_bars, 50)
-
             num_bars = max(num_bars, 50)
             dates = pd.date_range(end=end_ts, periods=num_bars, freq=data_freq)
-
             start_price = np.random.uniform(1.0, 1.5)
             if "JPY" in pair.upper(): start_price = np.random.uniform(100.0, 180.0)
-
             price_changes = np.random.normal(0, 0.001, size=num_bars)
             if "JPY" in pair.upper(): price_changes = np.random.normal(0, 0.1, size=num_bars)
             if timeframe in ["M1", "M5", "M15"]:
                 price_changes = np.random.normal(0, 0.0001, size=num_bars)
                 if "JPY" in pair.upper(): price_changes = np.random.normal(0, 0.01, size=num_bars)
-
-
             close_prices = start_price + np.cumsum(price_changes)
             close_prices = np.maximum(0.01, close_prices)
-            if "JPY" not in pair.upper() and np.min(close_prices) < 0.5:
-                close_prices = np.maximum(0.5, close_prices)
-
+            if "JPY" not in pair.upper() and np.min(close_prices) < 0.5: close_prices = np.maximum(0.5, close_prices)
             open_prices = np.roll(close_prices, 1)
             open_prices[0] = close_prices[0] - price_changes[0]
-
             data_list = []
             for i in range(num_bars):
                 o, c = open_prices[i], close_prices[i]
@@ -255,10 +238,7 @@ if __name__ == "__main__":
                 high = max(o, c) + abs(np.random.normal(0, volatility_factor))
                 low = min(o, c) - abs(np.random.normal(0, volatility_factor))
                 low = max(0.0001, low)
-                data_list.append({
-                    "time": dates[i], "open": o, "high": high, "low": low, "close": c,
-                    "volume": np.random.randint(100, 10000)
-                })
+                data_list.append({"time": dates[i], "open": o, "high": high, "low": low, "close": c, "volume": np.random.randint(100, 10000)})
             return data_list
 
         def place_order(self, order_details): return {"success": True, "order_id": "sim123", "message": "Simulated order placed."}
@@ -268,7 +248,11 @@ if __name__ == "__main__":
         def get_pending_orders(self): return []
 
     mock_broker = MockBroker()
-    forex_graph_instance = ForexTradingGraph(llm=mock_llm, broker_interface=mock_broker)
+    # Pass the placeholder LLM for sub-agents; ForexMasterAgent will use its internal default or fallback
+    # The first 'llm' parameter in ForexTradingGraph is now 'llm_for_sub_agents'
+    forex_graph_instance = ForexTradingGraph(llm_for_sub_agents=placeholder_llm_for_sub_agents_and_risk,
+                                             broker_interface=mock_broker,
+                                             llm_model_name_for_master="gpt-3.5-turbo") # Explicitly pass for master
 
     initial_run_state = {
         "market_outlook": {
@@ -303,8 +287,14 @@ if __name__ == "__main__":
     strategic_directive_output = final_output_state.get("strategic_directive")
     if strategic_directive_output:
         print("Strategic Directive Output:")
-        for k, v in strategic_directive_output.items(): print(f"  {k}: {v}")
-    else: print("Strategic Directive not found in final output.")
+        # Check if the directive itself indicates LLM generation
+        llm_gen_status = strategic_directive_output.get("llm_generated", False)
+        print(f"  LLM Generated: {llm_gen_status}")
+        for k, v in strategic_directive_output.items():
+            if k != "llm_generated": # Don't print the flag again here
+                print(f"    {k}: {v}")
+    else:
+        print("  Strategic Directive not found in output.")
 
     for agent_name_key in ["day_trader_proposals", "swing_trader_proposals", "scalper_proposals", "position_trader_proposals"]:
         print(f"\n--- Specific check for {agent_name_key.replace('_', ' ').title()} ---")
