@@ -1,7 +1,7 @@
 # In TradingAgents/tradingagents/forex_agents/scalper_agent.py
 import pandas as pd
 import pandas_ta as ta
-import numpy as np
+import numpy as np # Not used directly here anymore for mock data generation
 from typing import Any, Dict, List, Optional
 
 class ScalperAgent:
@@ -12,43 +12,7 @@ class ScalperAgent:
         self.broker_interface = broker_interface # Placeholder
         # print(f"ScalperAgent '{self.agent_id}' initialized.")
 
-    def _create_mock_data(self, pair: str, num_bars: int = 60, freq: str = 'T') -> pd.DataFrame: # 'T' for minutes
-        # Create mock OHLCV data for M1 timeframe
-        dates = pd.date_range(end=pd.Timestamp.now(tz='UTC'), periods=num_bars, freq=freq)
-
-        start_price = np.random.uniform(1.05, 1.15)
-        if "JPY" in pair.upper():
-            start_price = np.random.uniform(140.0, 160.0)
-
-        price_changes = np.random.normal(0, 0.00005, size=num_bars) # Very small changes for M1 ticks effectively
-        if "JPY" in pair.upper():
-            price_changes = np.random.normal(0, 0.005, size=num_bars)
-
-        close_prices = start_price + np.cumsum(price_changes)
-        # Ensure prices are positive
-        close_prices[close_prices <= 0] = start_price / 2 # Reset to a positive floor if it goes negative
-
-        open_prices = np.roll(close_prices, 1) # Open is previous close for simplicity here
-        open_prices[0] = close_prices[0] - price_changes[0] # Adjust first open
-
-        data = {
-            'open': open_prices,
-            'high': np.maximum(open_prices, close_prices) + np.random.uniform(0.00001, 0.0001, size=num_bars),
-            'low': np.minimum(open_prices, close_prices) - np.random.uniform(0.00001, 0.0001, size=num_bars),
-            'close': close_prices,
-            'volume': np.random.randint(10, 100, size=num_bars)
-        }
-        df = pd.DataFrame(data, index=dates)
-
-        df['high'] = np.maximum(df['high'], df[['open', 'close']].max(axis=1))
-        df['low'] = np.minimum(df['low'], df[['open', 'close']].min(axis=1))
-
-        # Ensure low <= open, close, high and high >= open, close, low
-        df['low'] = np.minimum(df['low'], df[['open', 'close', 'high']].min(axis=1))
-        df['high'] = np.maximum(df['high'], df[['open', 'close', 'low']].max(axis=1))
-
-        # print(f"ScalperAgent: Mock M1 data for {pair} (last 3 bars):\n{df.tail(3)}")
-        return df
+    # _create_mock_data method is REMOVED
 
     def _get_pair_bias_from_directive(self, pair: str, strategic_directive: Dict[str, Any]) -> Optional[str]:
         directive_bias_info = strategic_directive.get("primary_bias", {})
@@ -90,12 +54,33 @@ class ScalperAgent:
         focus_pairs = strategic_directive.get("focus_pairs", [])
 
         for pair in focus_pairs:
-            print(f"ScalperAgent '{self.agent_id}': Analyzing pair {pair}")
-            # market_data_df = self.broker_interface.get_historical_data(pair, "M1", count=60)
-            market_data_df = self._create_mock_data(pair, num_bars=60, freq='T')
+            print(f"ScalperAgent '{self.agent_id}': Analyzing {pair}...")
+            # Fetch data using the broker interface - M1 for scalping
+            raw_market_data = self.broker_interface.get_historical_data(pair=pair, timeframe="M1", count=60)
 
-            if market_data_df is None or market_data_df.empty or len(market_data_df) < 20:
-                print(f"ScalperAgent '{self.agent_id}': Insufficient market data for {pair} (need >20 bars). Got: {len(market_data_df) if market_data_df is not None else 0}")
+            if raw_market_data is None or not raw_market_data:
+                print(f"ScalperAgent '{self.agent_id}': No market data received from broker for {pair}")
+                continue
+
+            try:
+                market_data_df = pd.DataFrame(raw_market_data)
+                if 'time' in market_data_df.columns:
+                    market_data_df['time'] = pd.to_datetime(market_data_df['time'])
+                    market_data_df.set_index('time', inplace=True)
+                else:
+                    print(f"ScalperAgent '{self.agent_id}': 'time' column missing in data for {pair} from broker.")
+                    continue
+
+                required_ohlcv = ['open', 'high', 'low', 'close', 'volume']
+                if not all(col in market_data_df.columns for col in required_ohlcv):
+                    print(f"ScalperAgent '{self.agent_id}': Data for {pair} missing one or more OHLCV columns. Has: {market_data_df.columns}")
+                    continue
+            except Exception as e:
+                print(f"ScalperAgent '{self.agent_id}': Error converting broker data to DataFrame for {pair}: {e}")
+                continue
+
+            if market_data_df.empty or len(market_data_df) < 20:
+                print(f"ScalperAgent '{self.agent_id}': Insufficient data points for {pair} after conversion ({len(market_data_df)}), needed ~20 for Stoch/short EMAs.")
                 continue
 
             try:
@@ -111,11 +96,11 @@ class ScalperAgent:
 
             required_cols = ["EMA_5", "EMA_10", "STOCH_K", "STOCH_D"]
             if not all(col in market_data_df.columns for col in required_cols):
-                print(f"ScalperAgent '{self.agent_id}': Could not calculate all indicators for {pair}.")
+                print(f"ScalperAgent '{self.agent_id}': Could not calculate all indicators for {pair}. Available: {market_data_df.columns}")
                 continue
 
             latest_data = market_data_df.iloc[-1]
-            previous_data = market_data_df.iloc[-2]
+            previous_data = market_data_df.iloc[-2] if len(market_data_df) >=2 else latest_data
 
             current_price = latest_data["close"]
             confidence = 0.5
@@ -125,24 +110,21 @@ class ScalperAgent:
             pair_bias_direction = self._get_pair_bias_from_directive(pair, strategic_directive)
             rationale_parts.append(f"Directive bias for {pair}: {pair_bias_direction if pair_bias_direction else 'none/neutral'}.")
 
-            # Scalping logic: EMA crossover + Stochastic confirmation
-            # Allow trades if bias matches or if bias is 'ranging' (scalper might find opportunities)
-            can_buy = pair_bias_direction in ["bullish", "ranging", None] # None bias means no strong counter-signal
+            can_buy = pair_bias_direction in ["bullish", "ranging", None]
             can_sell = pair_bias_direction in ["bearish", "ranging", None]
 
             if can_buy and previous_data["EMA_5"] < previous_data["EMA_10"] and latest_data["EMA_5"] > latest_data["EMA_10"]:
                 rationale_parts.append("Bullish EMA crossover (5/10).")
-                if latest_data["STOCH_K"] < 80 and latest_data["STOCH_D"] < 80 and latest_data["STOCH_K"] > latest_data["STOCH_D"]: # Stochastic rising and not overbought
+                if latest_data["STOCH_K"] < 80 and latest_data["STOCH_D"] < 80 and latest_data["STOCH_K"] > latest_data["STOCH_D"]:
                     trade_side = "buy"
                     confidence = 0.60
                     rationale_parts.append(f"Stoch K({latest_data['STOCH_K']:.2f}) / D({latest_data['STOCH_D']:.2f}) bullish confirmation.")
                 else:
                     rationale_parts.append(f"Stoch K({latest_data['STOCH_K']:.2f}) / D({latest_data['STOCH_D']:.2f}) no bullish confirmation.")
 
-            # Check for sell only if no buy signal was confirmed (to avoid immediate flip-flop on same bar)
             if not trade_side and can_sell and previous_data["EMA_5"] > previous_data["EMA_10"] and latest_data["EMA_5"] < latest_data["EMA_10"]:
                 rationale_parts.append("Bearish EMA crossover (5/10).")
-                if latest_data["STOCH_K"] > 20 and latest_data["STOCH_D"] > 20 and latest_data["STOCH_K"] < latest_data["STOCH_D"]: # Stochastic falling and not oversold
+                if latest_data["STOCH_K"] > 20 and latest_data["STOCH_D"] > 20 and latest_data["STOCH_K"] < latest_data["STOCH_D"]:
                     trade_side = "sell"
                     confidence = 0.60
                     rationale_parts.append(f"Stoch K({latest_data['STOCH_K']:.2f}) / D({latest_data['STOCH_D']:.2f}) bearish confirmation.")
@@ -151,7 +133,6 @@ class ScalperAgent:
 
             if not trade_side :
                  rationale_parts.append("No qualifying EMA/Stochastic signal found under current bias.")
-
 
             if trade_side:
                 pips_sl = 0.0007
@@ -175,9 +156,9 @@ class ScalperAgent:
                 })
 
         if not trade_proposals:
-            print(f"ScalperAgent '{self.agent_id}': No compelling scalping opportunities found for pairs: {focus_pairs}.")
+            print(f"ScalperAgent '{self.agent_id}': No compelling scalping opportunities found for pairs: {focus_pairs} based on current rules and broker data.")
         else:
-            print(f"ScalperAgent '{self.agent_id}': Generated {len(trade_proposals)} proposals.")
+            print(f"ScalperAgent '{self.agent_id}': Generated {len(trade_proposals)} proposals using broker data.")
             for prop_idx, prop in enumerate(trade_proposals):
                  print(f"  Proposal {prop_idx+1}: {prop['pair']} {prop['side']}, SL: {prop['stop_loss']}, TP: {prop['take_profit']}, Conf: {prop['confidence_score']}, Rat: {prop['rationale']}")
 

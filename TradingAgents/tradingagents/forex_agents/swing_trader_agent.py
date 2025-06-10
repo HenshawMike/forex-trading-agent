@@ -1,39 +1,21 @@
 import pandas as pd
 import pandas_ta as ta
-import numpy as np # For mock data generation
+import numpy as np # Still used by other agents, but not directly here anymore
 from typing import Any, Dict, List, Optional
 
 class SwingTraderAgent:
-    def __init__(self, agent_id: str, llm: Any, memory: Any, broker_interface: Any): # Replace Any with actual types
+    def __init__(self, agent_id: str, llm: Any, memory: Any, broker_interface: Any):
         self.agent_id = agent_id
-        self.llm = llm # Placeholder
-        self.memory = memory # Placeholder
-        self.broker_interface = broker_interface # Placeholder
-        # print(f"SwingTraderAgent '{self.agent_id}' initialized.") # Reduced verbosity
+        self.llm = llm
+        self.memory = memory
+        self.broker_interface = broker_interface
+        # print(f"SwingTraderAgent '{self.agent_id}' initialized.")
 
-    def _create_mock_data(self, pair: str, num_bars: int = 200, freq: str = 'D') -> pd.DataFrame:
-        # Create mock OHLCV data for daily timeframe
-        dates = pd.date_range(end=pd.Timestamp.now(tz='UTC'), periods=num_bars, freq=freq)
-        data = {
-            'open': np.random.uniform(1.0, 1.2, size=num_bars), # Wider range for daily
-            'high': 0.0,
-            'low': 0.0,
-            'close': np.random.uniform(1.0, 1.2, size=num_bars),
-            'volume': np.random.randint(1000, 10000, size=num_bars)
-        }
-        df = pd.DataFrame(data, index=dates)
-        df['high'] = df[['open', 'close']].max(axis=1) + np.random.uniform(0.001, 0.005, size=num_bars) # Wider daily moves
-        df['low'] = df[['open', 'close']].min(axis=1) - np.random.uniform(0.001, 0.005, size=num_bars)
-        df['low'] = np.minimum(df['low'], df[['open', 'close', 'high']].min(axis=1))
-        df['high'] = np.maximum(df['high'], df[['open', 'close', 'low']].max(axis=1))
-        # print(f"Mock daily data for {pair} (last 3 bars):\n{df.tail(3)}")
-        return df
+    # _create_mock_data method is REMOVED
 
     def _get_pair_bias_from_directive(self, pair: str, strategic_directive: Dict[str, Any]) -> Optional[str]:
-        # Helper to determine bias for a specific pair based on the directive
         directive_bias_info = strategic_directive.get("primary_bias", {})
         pair_bias_direction = None
-
         if isinstance(directive_bias_info.get("pair"), str) and directive_bias_info.get("pair") == pair:
             pair_bias_direction = directive_bias_info.get("direction")
         elif isinstance(directive_bias_info.get("currency"), str):
@@ -59,7 +41,6 @@ class SwingTraderAgent:
                (isinstance(directive_bias_info.get("pairs"), list) and \
                 pair in directive_bias_info.get("pairs", []) and "bearish" in market_condition):
                 return "bearish"
-
         return pair_bias_direction
 
     def analyze_and_propose_trades(
@@ -72,18 +53,39 @@ class SwingTraderAgent:
         focus_pairs = strategic_directive.get("focus_pairs", [])
 
         for pair in focus_pairs:
-            print(f"SwingTraderAgent '{self.agent_id}': Analyzing pair {pair}")
-            # market_data_df = self.broker_interface.get_historical_data(pair, "D1", count=200)
-            market_data_df = self._create_mock_data(pair, num_bars=200, freq='D')
+            print(f"SwingTraderAgent '{self.agent_id}': Analyzing {pair}...")
+            # Fetch data using the broker interface - H4 for swing trading
+            raw_market_data = self.broker_interface.get_historical_data(pair=pair, timeframe="H4", count=200)
 
-            if market_data_df is None or market_data_df.empty or len(market_data_df) < 50: # Min length for EMAs
-                print(f"SwingTraderAgent '{self.agent_id}': Insufficient market data for {pair} (need >50 bars). Got: {len(market_data_df) if market_data_df is not None else 0}")
+            if raw_market_data is None or not raw_market_data:
+                print(f"SwingTraderAgent '{self.agent_id}': No market data received from broker for {pair}")
+                continue
+
+            try:
+                market_data_df = pd.DataFrame(raw_market_data)
+                if 'time' in market_data_df.columns:
+                    market_data_df['time'] = pd.to_datetime(market_data_df['time'])
+                    market_data_df.set_index('time', inplace=True)
+                else:
+                    print(f"SwingTraderAgent '{self.agent_id}': 'time' column missing in data for {pair} from broker.")
+                    continue
+
+                required_ohlcv = ['open', 'high', 'low', 'close', 'volume']
+                if not all(col in market_data_df.columns for col in required_ohlcv):
+                    print(f"SwingTraderAgent '{self.agent_id}': Data for {pair} missing one or more OHLCV columns. Has: {market_data_df.columns}")
+                    continue
+            except Exception as e:
+                print(f"SwingTraderAgent '{self.agent_id}': Error converting broker data to DataFrame for {pair}: {e}")
+                continue
+
+            if market_data_df.empty or len(market_data_df) < 200: # Check against the count requested
+                print(f"SwingTraderAgent '{self.agent_id}': Insufficient data points for {pair} after conversion ({len(market_data_df)}), needed ~200.")
                 continue
 
             try:
                 market_data_df.ta.ema(length=50, append=True, col="EMA_50")
                 market_data_df.ta.ema(length=200, append=True, col="EMA_200")
-                macd = market_data_df.ta.macd(append=False) # Calculate separately to handle column names
+                macd = market_data_df.ta.macd(append=False)
                 if macd is not None and not macd.empty:
                     market_data_df['MACD_line'] = macd.iloc[:,0]
                     market_data_df['MACD_signal'] = macd.iloc[:,1]
@@ -94,11 +96,11 @@ class SwingTraderAgent:
 
             required_cols = ["EMA_50", "EMA_200", "MACD_line", "MACD_signal", "RSI_14"]
             if not all(col in market_data_df.columns for col in required_cols):
-                print(f"SwingTraderAgent '{self.agent_id}': Could not calculate all indicators for {pair}.")
+                print(f"SwingTraderAgent '{self.agent_id}': Could not calculate all indicators for {pair}. Available: {market_data_df.columns}")
                 continue
 
             latest_data = market_data_df.iloc[-1]
-            previous_data = market_data_df.iloc[-2]
+            previous_data = market_data_df.iloc[-2] if len(market_data_df) >=2 else latest_data
 
             current_price = latest_data["close"]
             confidence = 0.5
@@ -106,7 +108,7 @@ class SwingTraderAgent:
             trade_side = None
 
             pair_bias_direction = self._get_pair_bias_from_directive(pair, strategic_directive)
-            rationale_parts.append(f"Interpreted directive bias for {pair}: {pair_bias_direction}.")
+            rationale_parts.append(f"Interpreted directive bias for {pair}: {pair_bias_direction if pair_bias_direction else 'none/neutral'}.")
 
             if pair_bias_direction == "bullish":
                 rationale_parts.append("Strategic directive suggests bullish outlook.")
@@ -115,7 +117,7 @@ class SwingTraderAgent:
                     if previous_data["MACD_line"] < previous_data["MACD_signal"] and \
                        latest_data["MACD_line"] > latest_data["MACD_signal"]:
                         rationale_parts.append("Bullish MACD crossover.")
-                        if latest_data["RSI_14"] < 70 and latest_data["RSI_14"] > 40 :
+                        if latest_data["RSI_14"] < 75 and latest_data["RSI_14"] > 40 :
                             trade_side = "buy"
                             confidence = 0.70
                             rationale_parts.append(f"RSI ({latest_data['RSI_14']:.2f}) confirms momentum, not overbought.")
@@ -133,7 +135,7 @@ class SwingTraderAgent:
                     if previous_data["MACD_line"] > previous_data["MACD_signal"] and \
                        latest_data["MACD_line"] < latest_data["MACD_signal"]:
                         rationale_parts.append("Bearish MACD crossover.")
-                        if latest_data["RSI_14"] > 30 and latest_data["RSI_14"] < 60:
+                        if latest_data["RSI_14"] > 25 and latest_data["RSI_14"] < 60:
                             trade_side = "sell"
                             confidence = 0.70
                             rationale_parts.append(f"RSI ({latest_data['RSI_14']:.2f}) confirms momentum, not oversold.")
@@ -145,8 +147,8 @@ class SwingTraderAgent:
                     rationale_parts.append("Price not showing clear downtrend structure below key EMAs.")
 
             elif pair_bias_direction == "ranging":
-                rationale_parts.append(f"Market condition for {pair} is ranging. SwingTrader might look for S/R bounces (not implemented in this skeleton).")
-            else:
+                rationale_parts.append(f"Market condition for {pair} is ranging. SwingTrader looking for S/R bounces (logic not implemented in this skeleton).")
+            else: # Neutral or other unhandled bias
                 rationale_parts.append(f"Neutral or unhandled bias '{pair_bias_direction}' for {pair}. No trend-following swing trades.")
 
 
@@ -175,9 +177,9 @@ class SwingTraderAgent:
                 })
 
         if not trade_proposals:
-            print(f"SwingTraderAgent '{self.agent_id}': No compelling swing trade opportunities found for pairs: {focus_pairs}.")
+            print(f"SwingTraderAgent '{self.agent_id}': No compelling swing trade opportunities found for pairs: {focus_pairs} based on current rules and broker data.")
         else:
-            print(f"SwingTraderAgent '{self.agent_id}': Generated {len(trade_proposals)} proposals.")
+            print(f"SwingTraderAgent '{self.agent_id}': Generated {len(trade_proposals)} proposals using broker data.")
             for prop_idx, prop in enumerate(trade_proposals):
                  print(f"  Proposal {prop_idx+1}: {prop['pair']} {prop['side']}, SL: {prop['stop_loss']}, TP: {prop['take_profit']}, Conf: {prop['confidence_score']}, Rat: {prop['rationale']}")
 
