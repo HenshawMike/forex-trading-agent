@@ -1,1 +1,1 @@
-from .trade_meta_agent import TradeMetaAgent
+from .trade_meta_agent import ForexMetaAgent
