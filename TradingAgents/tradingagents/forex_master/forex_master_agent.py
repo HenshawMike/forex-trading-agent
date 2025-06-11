@@ -59,6 +59,14 @@ class ForexMasterAgent:
             market_context_snapshot=market_context_snapshot
         ))
 
+        # Task for ScalperAgent
+        tasks.append(ForexSubAgentTask(
+            task_id=f"task_scalp_{currency_pair}_{current_time_str.replace(':', '-')}", # Use current_time_str
+            currency_pair=currency_pair,
+            timeframes_to_analyze=["M1", "M5"], # Example scalper timeframes
+            market_context_snapshot=market_context_snapshot
+        ))
+
         print(f"ForexMasterAgent: Created {len(tasks)} tasks.")
         return tasks
 

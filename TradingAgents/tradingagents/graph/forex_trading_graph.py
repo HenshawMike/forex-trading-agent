@@ -8,6 +8,7 @@ from tradingagents.broker_interface.base import BrokerInterface
 from tradingagents.forex_master.forex_master_agent import ForexMasterAgent
 from tradingagents.forex_agents.day_trader_agent import DayTraderAgent
 from tradingagents.forex_agents.swing_trader_agent import SwingTraderAgent
+from tradingagents.forex_agents.scalper_agent import ScalperAgent # Added Scalper
 from tradingagents.forex_meta.trade_meta_agent import ForexMetaAgent
 from tradingagents.forex_utils.forex_states import (
     ForexSubAgentTask,
@@ -28,6 +29,7 @@ class ForexGraphState(TypedDict):
 
     # For collecting proposals from sub-agents
     # We'll have specific keys for each agent's proposal for simplicity in this skeleton
+    scalper_proposal: Optional[ForexTradeProposal] # Added for Scalper
     day_trader_proposal: Optional[ForexTradeProposal]
     swing_trader_proposal: Optional[ForexTradeProposal]
     # This list will be populated by the master_aggregation_node based on above
@@ -49,8 +51,9 @@ class ForexTradingGraph:
         self.broker = broker # Store the broker
         self.master_agent = ForexMasterAgent()
         # Pass broker to agents that need it
+        self.scalper_agent = ScalperAgent(broker=self.broker) # Added Scalper
         self.day_trader_agent = DayTraderAgent(broker=self.broker)
-        self.swing_trader_agent = SwingTraderAgent(broker=self.broker) # Assuming SwingTrader will also need it
+        self.swing_trader_agent = SwingTraderAgent(broker=self.broker)
         self.meta_agent = ForexMetaAgent()
 
         self.graph = self._setup_graph()
@@ -69,24 +72,24 @@ class ForexTradingGraph:
 
         # Add Nodes
         builder.add_node("master_initial_processing", self.master_agent.initial_processing_node)
+        builder.add_node("scalper_processing", self._run_scalper) # Added Scalper
         builder.add_node("day_trader_processing", self._run_day_trader)
         builder.add_node("swing_trader_processing", self._run_swing_trader)
-        builder.add_node("master_aggregation", self._run_master_aggregation) # Changed to wrapper
+        # Ensure this node name matches the method name for the wrapper
+        builder.add_node("master_aggregation_wrapper", self._run_master_aggregation_wrapper)
         builder.add_node("meta_agent_evaluation", self.meta_agent.evaluate_proposals)
 
         # Define Edges
         builder.set_entry_point("master_initial_processing")
 
-        # After master_initial_processing, it prepares tasks.
-        # For this skeleton, we'll run Day Trader then Swing Trader sequentially.
-        # A more advanced graph would use conditional edges based on tasks in state["sub_agent_tasks"].
-        builder.add_edge("master_initial_processing", "day_trader_processing")
+        builder.add_edge("master_initial_processing", "scalper_processing") # Scalper first
+        builder.add_edge("scalper_processing", "day_trader_processing")
         builder.add_edge("day_trader_processing", "swing_trader_processing")
 
-        # After all relevant sub-agents have run, go to master_aggregation
-        builder.add_edge("swing_trader_processing", "master_aggregation")
+        # After all relevant sub-agents have run, go to master_aggregation_wrapper
+        builder.add_edge("swing_trader_processing", "master_aggregation_wrapper")
 
-        builder.add_edge("master_aggregation", "meta_agent_evaluation")
+        builder.add_edge("master_aggregation_wrapper", "meta_agent_evaluation")
 
         # The meta_agent_evaluation is the final step in this simple flow
         builder.add_edge("meta_agent_evaluation", END)
@@ -129,25 +132,36 @@ class ForexTradingGraph:
             print("ForexTradingGraph: No Swing Trader task found.")
             return {"swing_trader_proposal": None, "error_message": state.get("error_message")}
 
-    def _run_master_aggregation(self, state: ForexGraphState) -> Dict[str, Any]:
-        print("ForexTradingGraph: Running Master Aggregation wrapper...")
+    def _run_scalper(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("ForexTradingGraph: Running Scalper...")
+        scalper_task = None
+        for task in state.get("sub_agent_tasks", []):
+            if "task_scalp_" in task.get("task_id", ""):
+                scalper_task = task
+                break
 
-        current_proposals_list: List[ForexTradeProposal] = []
-        day_proposal = state.get('day_trader_proposal')
-        if day_proposal:
-            current_proposals_list.append(day_proposal)
+        if scalper_task:
+            return self.scalper_agent.process_task({"current_scalper_task": scalper_task, **state})
+        else:
+            print("ForexTradingGraph: No Scalper task found.")
+            return {"scalper_proposal": None}
 
-        swing_proposal = state.get('swing_trader_proposal')
-        if swing_proposal:
-            current_proposals_list.append(swing_proposal)
+    def _run_master_aggregation_wrapper(self, state: ForexGraphState) -> Dict[str, Any]:
+        print("ForexTradingGraph: Master Aggregation Wrapper collecting proposals...")
+        proposals: List[ForexTradeProposal] = []
 
-        # The master_agent.aggregation_node expects the list of proposals under
-        # the 'proposals_from_sub_agents' key in the state dict it receives.
-        aggregation_input_state = state.copy() # Start with a copy of the current state
-        aggregation_input_state["proposals_from_sub_agents"] = current_proposals_list
+        # Collect proposals from all agents that might have run
+        if state.get("scalper_proposal"):
+            proposals.append(state["scalper_proposal"])
+        if state.get("day_trader_proposal"):
+            proposals.append(state["day_trader_proposal"])
+        if state.get("swing_trader_proposal"):
+            proposals.append(state["swing_trader_proposal"])
 
-        # Now call the actual master agent's aggregation node with the prepared state
-        return self.master_agent.aggregation_node(aggregation_input_state)
+        master_aggregation_input_state = state.copy()
+        master_aggregation_input_state["proposals_from_sub_agents"] = proposals
+
+        return self.master_agent.aggregation_node(master_aggregation_input_state)
 
 
     def invoke_graph(self, currency_pair: str, simulated_time_iso: str) -> Optional[ForexFinalDecision]:
@@ -157,6 +171,7 @@ class ForexTradingGraph:
             current_simulated_time=simulated_time_iso,
             sub_agent_tasks=[],
             market_regime="Unknown", # Master will assess
+            scalper_proposal=None, # Added for Scalper
             day_trader_proposal=None,
             swing_trader_proposal=None,
             proposals_from_sub_agents=[], # Initialize as empty list
