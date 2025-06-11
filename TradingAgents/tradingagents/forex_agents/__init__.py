@@ -1,3 +1,4 @@
+# TradingAgents/tradingagents/forex_agents/__init__.py
 from .day_trader_agent import DayTraderAgent
 from .swing_trader_agent import SwingTraderAgent
 from .scalper_agent import ScalperAgent
