@@ -169,218 +169,218 @@ class ScalperAgent:
                 data_message = f"Error fetching data: {e}"
                 traceback.print_exc()
 
-    # --- START OF NEW TA CALCULATION LOGIC FOR SCALPER ---
-    ta_message = "TA not performed."
-    latest_indicators = {} # Initialize to empty dict
+        # --- START OF NEW TA CALCULATION LOGIC FOR SCALPER ---
+        ta_message = "TA not performed."
+        latest_indicators = {} # Initialize to empty dict
 
-    if historical_data and len(historical_data) >= self.ema_long_period:
-        try:
-            if "Spread too wide!" in spread_check_message:
-                ta_message = "TA skipped due to wide spread."
-                print(f"{self.agent_id}: {ta_message}")
-            else:
-                print(f"{self.agent_id}: Converting fetched data to DataFrame for TA...")
-                df = pd.DataFrame(historical_data)
-                if 'timestamp' not in df.columns:
-                    raise ValueError("DataFrame created from historical_data is missing 'timestamp' column.")
-
-                df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s', utc=True)
-                df.set_index('timestamp', inplace=True)
-
-                required_ohlc = ['open', 'high', 'low', 'close']
-                if not all(col in df.columns for col in required_ohlc):
-                    raise ValueError(f"DataFrame is missing one or more required OHLC columns: {required_ohlc}")
-
-                print(f"{self.agent_id}: Calculating TA indicators for Scalping (EMAs: {self.ema_short_period}/{self.ema_long_period}, RSI: {self.rsi_period})...")
-                df.ta.rsi(length=self.rsi_period, append=True, col_names=(f'RSI_{self.rsi_period}',))
-                df.ta.ema(length=self.ema_short_period, append=True, col_names=(f'EMA_{self.ema_short_period}',))
-                df.ta.ema(length=self.ema_long_period, append=True, col_names=(f'EMA_{self.ema_long_period}',))
-                # Optionally add MACD for M5 scalping, but might be slow for M1
-                # df.ta.macd(fast=self.macd_fast, slow=self.macd_slow, signal=self.macd_signal, append=True,
-                #            col_names=(f'MACD_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}',
-                #                       f'MACDH_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}',
-                #                       f'MACDS_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'))
-
-                if not df.empty and not df.iloc[-1].empty: # Check if last row is not empty
-                    last_row = df.iloc[-1]
-                    rsi_col_name = f'RSI_{self.rsi_period}'
-                    ema_s_col_name = f'EMA_{self.ema_short_period}'
-                    ema_l_col_name = f'EMA_{self.ema_long_period}'
-
-                    current_pair_precision = self._calculate_pip_value_and_precision(currency_pair)[1]
-
-                    latest_indicators = {
-                        rsi_col_name: round(last_row[rsi_col_name], 2) if rsi_col_name in last_row and pd.notna(last_row[rsi_col_name]) else None,
-                        ema_s_col_name: round(last_row[ema_s_col_name], current_pair_precision) if ema_s_col_name in last_row and pd.notna(last_row[ema_s_col_name]) else None,
-                        ema_l_col_name: round(last_row[ema_l_col_name], current_pair_precision) if ema_l_col_name in last_row and pd.notna(last_row[ema_l_col_name]) else None,
-                    }
-                    # Add MACD if calculated
-                    # macd_line_col = f'MACD_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'
-                    # macd_signal_col = f'MACDS_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'
-                    # if macd_line_col in df.columns and macd_signal_col in df.columns: # Check if columns exist
-                    #     latest_indicators['MACD_line'] = round(last_row[macd_line_col], current_pair_precision) if pd.notna(last_row[macd_line_col]) else None
-                    #     latest_indicators['MACD_signal_line'] = round(last_row[macd_signal_col], current_pair_precision) if pd.notna(last_row[macd_signal_col]) else None
-
-                    ta_message = f"TA calculated for Scalping. Latest RSI: {latest_indicators.get(rsi_col_name)}"
+        if historical_data and len(historical_data) >= self.ema_long_period:
+            try:
+                if "Spread too wide!" in spread_check_message:
+                    ta_message = "TA skipped due to wide spread."
                     print(f"{self.agent_id}: {ta_message}")
                 else:
-                    ta_message = "DataFrame was empty or last row was empty after TA calculation attempts."
-                    print(f"{self.agent_id}: {ta_message}")
+                    print(f"{self.agent_id}: Converting fetched data to DataFrame for TA...")
+                    df = pd.DataFrame(historical_data)
+                    if 'timestamp' not in df.columns:
+                        raise ValueError("DataFrame created from historical_data is missing 'timestamp' column.")
 
-        except Exception as e:
-            print(f"{self.agent_id}: Error during TA calculation for {currency_pair}: {e}")
-            ta_message = f"Error during TA calculation: {e}"
-            traceback.print_exc()
-    elif historical_data:
-        ta_message = f"Insufficient data for TA (got {len(historical_data)} bars, need >= {self.ema_long_period})."
-        print(f"{self.agent_id}: {ta_message}")
-    else:
-        ta_message = "TA not performed as no historical data was available."
-        print(f"{self.agent_id}: {ta_message}")
-    # --- END OF NEW TA CALCULATION LOGIC FOR SCALPER ---
+                    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='s', utc=True)
+                    df.set_index('timestamp', inplace=True)
 
-    # Update supporting_data with ta_info before strategy block, as strategy might use it
-    supporting_data_for_proposal["data_fetch_info"] = data_message
-    supporting_data_for_proposal["spread_check_info"] = spread_check_message
-    supporting_data_for_proposal["ta_calculation_info"] = ta_message
-    supporting_data_for_proposal.update(latest_indicators)
+                    required_ohlc = ['open', 'high', 'low', 'close']
+                    if not all(col in df.columns for col in required_ohlc):
+                        raise ValueError(f"DataFrame is missing one or more required OHLC columns: {required_ohlc}")
 
-    # --- START OF NEW SCALPING STRATEGY RULE LOGIC ---
-    final_signal = "HOLD"
-    final_confidence = 0.5 # Default confidence for HOLD
-    strategy_rationale_parts = [f"Scalping Strategy based on EMA({self.ema_short_period}/{self.ema_long_period}), RSI({self.rsi_period}, OB:{self.rsi_overbought},OS:{self.rsi_oversold}), MaxSpread:{self.max_allowable_spread_pips} pips."]
+                    print(f"{self.agent_id}: Calculating TA indicators for Scalping (EMAs: {self.ema_short_period}/{self.ema_long_period}, RSI: {self.rsi_period})...")
+                    df.ta.rsi(length=self.rsi_period, append=True, col_names=(f'RSI_{self.rsi_period}',))
+                    df.ta.ema(length=self.ema_short_period, append=True, col_names=(f'EMA_{self.ema_short_period}',))
+                    df.ta.ema(length=self.ema_long_period, append=True, col_names=(f'EMA_{self.ema_long_period}',))
+                    # Optionally add MACD for M5 scalping, but might be slow for M1
+                    # df.ta.macd(fast=self.macd_fast, slow=self.macd_slow, signal=self.macd_signal, append=True,
+                    #            col_names=(f'MACD_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}',
+                    #                       f'MACDH_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}',
+                    #                       f'MACDS_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'))
 
-    # Critical Check: Was spread acceptable?
-    # spread_check_message is from the data fetching phase
-    if "Spread too wide!" in spread_check_message:
-        strategy_rationale_parts.append(f"HOLD due to wide spread: {spread_check_message}")
-        final_confidence = 0.3 # Lower confidence for forced HOLD due to spread
-        print(f"{self.agent_id}: Strategy resulted in HOLD due to wide spread condition.")
-    else:
-        # Proceed with indicator-based strategy only if spread was OK
-        required_indicators = [
-            f'EMA_{self.ema_short_period}', f'EMA_{self.ema_long_period}',
-            f'RSI_{self.rsi_period}'
-            # Not including MACD for this basic scalper strategy for now
-        ]
+                    if not df.empty and not df.iloc[-1].empty: # Check if last row is not empty
+                        last_row = df.iloc[-1]
+                        rsi_col_name = f'RSI_{self.rsi_period}'
+                        ema_s_col_name = f'EMA_{self.ema_short_period}'
+                        ema_l_col_name = f'EMA_{self.ema_long_period}'
 
-        indicators_present = all(indicator_key in latest_indicators and latest_indicators[indicator_key] is not None for indicator_key in required_indicators)
+                        current_pair_precision = self._calculate_pip_value_and_precision(currency_pair)[1]
 
-        if not latest_indicators or not indicators_present:
-            strategy_rationale_parts.append("Not all indicators available for scalping strategy evaluation.")
-            print(f"{self.agent_id}: Skipping scalping strategy rules due to missing indicators. {latest_indicators}")
+                        latest_indicators = {
+                            rsi_col_name: round(last_row[rsi_col_name], 2) if rsi_col_name in last_row and pd.notna(last_row[rsi_col_name]) else None,
+                            ema_s_col_name: round(last_row[ema_s_col_name], current_pair_precision) if ema_s_col_name in last_row and pd.notna(last_row[ema_s_col_name]) else None,
+                            ema_l_col_name: round(last_row[ema_l_col_name], current_pair_precision) if ema_l_col_name in last_row and pd.notna(last_row[ema_l_col_name]) else None,
+                        }
+                        # Add MACD if calculated
+                        # macd_line_col = f'MACD_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'
+                        # macd_signal_col = f'MACDS_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'
+                        # if macd_line_col in df.columns and macd_signal_col in df.columns: # Check if columns exist
+                        #     latest_indicators['MACD_line'] = round(last_row[macd_line_col], current_pair_precision) if pd.notna(last_row[macd_line_col]) else None
+                        #     latest_indicators['MACD_signal_line'] = round(last_row[macd_signal_col], current_pair_precision) if pd.notna(last_row[macd_signal_col]) else None
+
+                        ta_message = f"TA calculated for Scalping. Latest RSI: {latest_indicators.get(rsi_col_name)}"
+                        print(f"{self.agent_id}: {ta_message}")
+                    else:
+                        ta_message = "DataFrame was empty or last row was empty after TA calculation attempts."
+                        print(f"{self.agent_id}: {ta_message}")
+
+            except Exception as e:
+                print(f"{self.agent_id}: Error during TA calculation for {currency_pair}: {e}")
+                ta_message = f"Error during TA calculation: {e}"
+                traceback.print_exc()
+        elif historical_data:
+            ta_message = f"Insufficient data for TA (got {len(historical_data)} bars, need >= {self.ema_long_period})."
+            print(f"{self.agent_id}: {ta_message}")
         else:
-            ema_short = latest_indicators[f'EMA_{self.ema_short_period}']
-            ema_long = latest_indicators[f'EMA_{self.ema_long_period}']
-            rsi = latest_indicators[f'RSI_{self.rsi_period}']
+            ta_message = "TA not performed as no historical data was available."
+            print(f"{self.agent_id}: {ta_message}")
+        # --- END OF NEW TA CALCULATION LOGIC FOR SCALPER ---
 
-            # Scalping Conditions (very simple example)
-            # Looking for quick momentum confirmed by short EMA alignment and RSI not at extremes.
+        # Update supporting_data with ta_info before strategy block, as strategy might use it
+        supporting_data_for_proposal["data_fetch_info"] = data_message
+        supporting_data_for_proposal["spread_check_info"] = spread_check_message
+        supporting_data_for_proposal["ta_calculation_info"] = ta_message
+        supporting_data_for_proposal.update(latest_indicators)
 
-            # Buy Condition: Short EMA above Long EMA (quick uptrend/momentum), RSI not overbought.
-            is_ema_bullish = ema_short > ema_long
-            is_rsi_ok_for_buy = rsi < self.rsi_overbought
+        # --- START OF NEW SCALPING STRATEGY RULE LOGIC ---
+        final_signal = "HOLD"
+        final_confidence = 0.5 # Default confidence for HOLD
+        strategy_rationale_parts = [f"Scalping Strategy based on EMA({self.ema_short_period}/{self.ema_long_period}), RSI({self.rsi_period}, OB:{self.rsi_overbought},OS:{self.rsi_oversold}), MaxSpread:{self.max_allowable_spread_pips} pips."]
 
-            # Sell Condition: Short EMA below Long EMA (quick downtrend/momentum), RSI not oversold.
-            is_ema_bearish = ema_short < ema_long
-            is_rsi_ok_for_sell = rsi > self.rsi_oversold
-
-            if is_ema_bullish and is_rsi_ok_for_buy:
-                final_signal = "BUY"
-                final_confidence = 0.65 # Scalping signals might have lower conviction due to noise
-                strategy_rationale_parts.append("BUY signal: Short EMA > Long EMA indicating upward momentum.")
-                strategy_rationale_parts.append(f"RSI ({rsi:.2f}) is below overbought ({self.rsi_overbought}).")
-            elif is_ema_bearish and is_rsi_ok_for_sell:
-                final_signal = "SELL"
-                final_confidence = 0.65
-                strategy_rationale_parts.append("SELL signal: Short EMA < Long EMA indicating downward momentum.")
-                strategy_rationale_parts.append(f"RSI ({rsi:.2f}) is above oversold ({self.rsi_oversold}).")
-            else:
-                final_signal = "HOLD"
-                final_confidence = 0.5
-                strategy_rationale_parts.append("HOLD signal: Scalping conditions for BUY or SELL not met.")
-                if not (is_ema_bullish and is_rsi_ok_for_buy) and not (is_ema_bearish and is_rsi_ok_for_sell):
-                    strategy_rationale_parts.append("EMA alignment or RSI conditions not favorable for entry.")
-
-    print(f"{self.agent_id}: Scalping Strategy decision: {final_signal}, Confidence: {final_confidence}")
-    strategy_rationale_message = " ".join(strategy_rationale_parts)
-    # --- END OF NEW SCALPING STRATEGY RULE LOGIC ---
-
-    # --- START OF NEW PRICE/SL/TP CALCULATION LOGIC FOR SCALPER ---
-    entry_price_calc: Optional[float] = None
-    stop_loss_calc: Optional[float] = None
-    take_profit_calc: Optional[float] = None
-    price_calculation_message = "SL/TP not calculated for HOLD signal or if spread was too wide."
-
-    # Only proceed to get price and calculate SL/TP if signal is BUY/SELL
-    # AND if the spread was acceptable (i.e., "Spread too wide!" is not in spread_check_message)
-    if final_signal in ["BUY", "SELL"] and "Spread too wide!" not in spread_check_message:
-        # Ensure currency_pair is defined
-        if not currency_pair: # currency_pair should be from task['currency_pair']
-             price_calculation_message = "Currency pair not available for price fetching."
-             print(f"{self.agent_id}: {price_calculation_message}")
+        # Critical Check: Was spread acceptable?
+        # spread_check_message is from the data fetching phase
+        if "Spread too wide!" in spread_check_message:
+            strategy_rationale_parts.append(f"HOLD due to wide spread: {spread_check_message}")
+            final_confidence = 0.3 # Lower confidence for forced HOLD due to spread
+            print(f"{self.agent_id}: Strategy resulted in HOLD due to wide spread condition.")
         else:
-            current_tick_data = self.broker.get_current_price(currency_pair)
+            # Proceed with indicator-based strategy only if spread was OK
+            required_indicators = [
+                f'EMA_{self.ema_short_period}', f'EMA_{self.ema_long_period}',
+                f'RSI_{self.rsi_period}'
+                # Not including MACD for this basic scalper strategy for now
+            ]
 
-            if current_tick_data and current_tick_data.get('ask') is not None and current_tick_data.get('bid') is not None:
-                pip_value, price_precision = self._calculate_pip_value_and_precision(currency_pair)
+            indicators_present = all(indicator_key in latest_indicators and latest_indicators[indicator_key] is not None for indicator_key in required_indicators)
 
-                if final_signal == "BUY":
-                    entry_price_calc = round(current_tick_data['ask'], price_precision)
-                    stop_loss_calc = round(entry_price_calc - (self.stop_loss_pips * pip_value), price_precision)
-                    take_profit_calc = round(entry_price_calc + (self.take_profit_pips * pip_value), price_precision)
-                elif final_signal == "SELL":
-                    entry_price_calc = round(current_tick_data['bid'], price_precision)
-                    stop_loss_calc = round(entry_price_calc + (self.stop_loss_pips * pip_value), price_precision)
-                    take_profit_calc = round(entry_price_calc - (self.take_profit_pips * pip_value), price_precision)
-
-                price_calculation_message = f"Entry: {entry_price_calc}, SL: {stop_loss_calc}, TP: {take_profit_calc} (pips SL: {self.stop_loss_pips}, TP: {self.take_profit_pips} for Scalping)."
-                print(f"{self.agent_id}: {price_calculation_message}")
+            if not latest_indicators or not indicators_present:
+                strategy_rationale_parts.append("Not all indicators available for scalping strategy evaluation.")
+                print(f"{self.agent_id}: Skipping scalping strategy rules due to missing indicators. {latest_indicators}")
             else:
-                price_calculation_message = f"Could not get valid current tick data (ask/bid) for {currency_pair} to calculate SL/TP. Signal was {final_signal}."
-                print(f"{self.agent_id}: {price_calculation_message}")
-                # If prices can't be fetched, revert to HOLD for safety, especially for scalping
-                # final_signal = "HOLD"
-                # final_confidence = 0.4 # Lower confidence
-                # strategy_rationale_message += " Reverted to HOLD: Price fetch error for SL/TP."
-    elif final_signal in ["BUY", "SELL"] and "Spread too wide!" in spread_check_message:
-        price_calculation_message = "SL/TP calculation skipped due to wide spread."
-        # Signal should already be HOLD if spread was too wide from previous step, but double check or ensure consistency
-        # final_signal = "HOLD" # Ensure it's HOLD
-        # final_confidence = 0.3
-    # --- END OF NEW PRICE/SL/TP CALCULATION LOGIC FOR SCALPER ---
+                ema_short = latest_indicators[f'EMA_{self.ema_short_period}']
+                ema_long = latest_indicators[f'EMA_{self.ema_long_period}']
+                rsi = latest_indicators[f'RSI_{self.rsi_period}']
 
-    # Update the ForexTradeProposal creation:
-    current_time_iso_prop = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                # Scalping Conditions (very simple example)
+                # Looking for quick momentum confirmed by short EMA alignment and RSI not at extremes.
 
-    # supporting_data_for_proposal should have been initialized and updated earlier
-    supporting_data_for_proposal["final_signal_determined"] = final_signal
-    supporting_data_for_proposal["final_confidence_determined"] = final_confidence
-    supporting_data_for_proposal["strategy_rationale_details"] = strategy_rationale_message # From strategy block
-    supporting_data_for_proposal["price_calculation_info"] = price_calculation_message
+                # Buy Condition: Short EMA above Long EMA (quick uptrend/momentum), RSI not overbought.
+                is_ema_bullish = ema_short > ema_long
+                is_rsi_ok_for_buy = rsi < self.rsi_overbought
 
-    data_fetch_msg = supporting_data_for_proposal.get("data_fetch_info", "Data fetch info N/A.")
-    # spread_check_message should be defined from earlier in process_task
-    # It's already in supporting_data_for_proposal["spread_check_info"]
-    spread_check_msg_local = supporting_data_for_proposal.get("spread_check_info", "Spread check info N/A.") # Use local var for rationale string
-    ta_calc_msg = supporting_data_for_proposal.get("ta_calculation_info", "TA calculation info N/A.")
+                # Sell Condition: Short EMA below Long EMA (quick downtrend/momentum), RSI not oversold.
+                is_ema_bearish = ema_short < ema_long
+                is_rsi_ok_for_sell = rsi > self.rsi_oversold
 
-    trade_proposal = ForexTradeProposal(
-        proposal_id=f"prop_scalp_{currency_pair if currency_pair else 'UNKPAIR'}_{current_time_iso_prop.replace(':', '-')}",
-        source_agent_type="ScalperAgent",
-        currency_pair=currency_pair if currency_pair else "Unknown",
-        timestamp=current_time_iso_prop,
-        signal=final_signal,
-        entry_price=entry_price_calc, # Use calculated value
-        stop_loss=stop_loss_calc,   # Use calculated value
-        take_profit=take_profit_calc, # Use calculated value
-        take_profit_2=None,
-        confidence_score=final_confidence,
-        rationale=f"ScalperAgent: {strategy_rationale_message} PriceCalc: {price_calculation_message} (Data: {data_fetch_msg} Spread: {spread_check_msg_local} TA: {ta_calc_msg})",
-        sub_agent_risk_level="Medium" if final_signal not in ["HOLD", None] else "Low", # Scalping can still be medium risk per trade
-        supporting_data=supporting_data_for_proposal
-    )
+                if is_ema_bullish and is_rsi_ok_for_buy:
+                    final_signal = "BUY"
+                    final_confidence = 0.65 # Scalping signals might have lower conviction due to noise
+                    strategy_rationale_parts.append("BUY signal: Short EMA > Long EMA indicating upward momentum.")
+                    strategy_rationale_parts.append(f"RSI ({rsi:.2f}) is below overbought ({self.rsi_overbought}).")
+                elif is_ema_bearish and is_rsi_ok_for_sell:
+                    final_signal = "SELL"
+                    final_confidence = 0.65
+                    strategy_rationale_parts.append("SELL signal: Short EMA < Long EMA indicating downward momentum.")
+                    strategy_rationale_parts.append(f"RSI ({rsi:.2f}) is above oversold ({self.rsi_oversold}).")
+                else:
+                    final_signal = "HOLD"
+                    final_confidence = 0.5
+                    strategy_rationale_parts.append("HOLD signal: Scalping conditions for BUY or SELL not met.")
+                    if not (is_ema_bullish and is_rsi_ok_for_buy) and not (is_ema_bearish and is_rsi_ok_for_sell):
+                        strategy_rationale_parts.append("EMA alignment or RSI conditions not favorable for entry.")
 
-    print(f"{self.agent_id}: Generated proposal for {currency_pair} after strategy evaluation.") # Consistent print message
+        print(f"{self.agent_id}: Scalping Strategy decision: {final_signal}, Confidence: {final_confidence}")
+        strategy_rationale_message = " ".join(strategy_rationale_parts)
+        # --- END OF NEW SCALPING STRATEGY RULE LOGIC ---
 
-    return {"scalper_proposal": trade_proposal}
+        # --- START OF NEW PRICE/SL/TP CALCULATION LOGIC FOR SCALPER ---
+        entry_price_calc: Optional[float] = None
+        stop_loss_calc: Optional[float] = None
+        take_profit_calc: Optional[float] = None
+        price_calculation_message = "SL/TP not calculated for HOLD signal or if spread was too wide."
+
+        # Only proceed to get price and calculate SL/TP if signal is BUY/SELL
+        # AND if the spread was acceptable (i.e., "Spread too wide!" is not in spread_check_message)
+        if final_signal in ["BUY", "SELL"] and "Spread too wide!" not in spread_check_message:
+            # Ensure currency_pair is defined
+            if not currency_pair: # currency_pair should be from task['currency_pair']
+                 price_calculation_message = "Currency pair not available for price fetching."
+                 print(f"{self.agent_id}: {price_calculation_message}")
+            else:
+                current_tick_data = self.broker.get_current_price(currency_pair)
+
+                if current_tick_data and current_tick_data.get('ask') is not None and current_tick_data.get('bid') is not None:
+                    pip_value, price_precision = self._calculate_pip_value_and_precision(currency_pair)
+
+                    if final_signal == "BUY":
+                        entry_price_calc = round(current_tick_data['ask'], price_precision)
+                        stop_loss_calc = round(entry_price_calc - (self.stop_loss_pips * pip_value), price_precision)
+                        take_profit_calc = round(entry_price_calc + (self.take_profit_pips * pip_value), price_precision)
+                    elif final_signal == "SELL":
+                        entry_price_calc = round(current_tick_data['bid'], price_precision)
+                        stop_loss_calc = round(entry_price_calc + (self.stop_loss_pips * pip_value), price_precision)
+                        take_profit_calc = round(entry_price_calc - (self.take_profit_pips * pip_value), price_precision)
+
+                    price_calculation_message = f"Entry: {entry_price_calc}, SL: {stop_loss_calc}, TP: {take_profit_calc} (pips SL: {self.stop_loss_pips}, TP: {self.take_profit_pips} for Scalping)."
+                    print(f"{self.agent_id}: {price_calculation_message}")
+                else:
+                    price_calculation_message = f"Could not get valid current tick data (ask/bid) for {currency_pair} to calculate SL/TP. Signal was {final_signal}."
+                    print(f"{self.agent_id}: {price_calculation_message}")
+                    # If prices can't be fetched, revert to HOLD for safety, especially for scalping
+                    # final_signal = "HOLD"
+                    # final_confidence = 0.4 # Lower confidence
+                    # strategy_rationale_message += " Reverted to HOLD: Price fetch error for SL/TP."
+        elif final_signal in ["BUY", "SELL"] and "Spread too wide!" in spread_check_message:
+            price_calculation_message = "SL/TP calculation skipped due to wide spread."
+            # Signal should already be HOLD if spread was too wide from previous step, but double check or ensure consistency
+            # final_signal = "HOLD" # Ensure it's HOLD
+            # final_confidence = 0.3
+        # --- END OF NEW PRICE/SL/TP CALCULATION LOGIC FOR SCALPER ---
+
+        # Update the ForexTradeProposal creation:
+        current_time_iso_prop = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+        # supporting_data_for_proposal should have been initialized and updated earlier
+        supporting_data_for_proposal["final_signal_determined"] = final_signal
+        supporting_data_for_proposal["final_confidence_determined"] = final_confidence
+        supporting_data_for_proposal["strategy_rationale_details"] = strategy_rationale_message # From strategy block
+        supporting_data_for_proposal["price_calculation_info"] = price_calculation_message
+
+        data_fetch_msg = supporting_data_for_proposal.get("data_fetch_info", "Data fetch info N/A.")
+        # spread_check_message should be defined from earlier in process_task
+        # It's already in supporting_data_for_proposal["spread_check_info"]
+        spread_check_msg_local = supporting_data_for_proposal.get("spread_check_info", "Spread check info N/A.") # Use local var for rationale string
+        ta_calc_msg = supporting_data_for_proposal.get("ta_calculation_info", "TA calculation info N/A.")
+
+        trade_proposal = ForexTradeProposal(
+            proposal_id=f"prop_scalp_{currency_pair if currency_pair else 'UNKPAIR'}_{current_time_iso_prop.replace(':', '-')}",
+            source_agent_type="ScalperAgent",
+            currency_pair=currency_pair if currency_pair else "Unknown",
+            timestamp=current_time_iso_prop,
+            signal=final_signal,
+            entry_price=entry_price_calc, # Use calculated value
+            stop_loss=stop_loss_calc,   # Use calculated value
+            take_profit=take_profit_calc, # Use calculated value
+            take_profit_2=None,
+            confidence_score=final_confidence,
+            rationale=f"ScalperAgent: {strategy_rationale_message} PriceCalc: {price_calculation_message} (Data: {data_fetch_msg} Spread: {spread_check_msg_local} TA: {ta_calc_msg})",
+            sub_agent_risk_level="Medium" if final_signal not in ["HOLD", None] else "Low", # Scalping can still be medium risk per trade
+            supporting_data=supporting_data_for_proposal
+        )
+
+        print(f"{self.agent_id}: Generated proposal for {currency_pair} after strategy evaluation.") # Consistent print message
+
+        return {"scalper_proposal": trade_proposal}

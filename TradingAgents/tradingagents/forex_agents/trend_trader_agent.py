@@ -6,25 +6,24 @@ import pandas as pd
 import pandas_ta as ta
 import traceback
 
-class PositionTraderAgent:
+class TrendTraderAgent:  # Changed class name
     def __init__(self,
                  broker: BrokerInterface,
-                 agent_id: str = "PositionTraderAgent_1",
+                 agent_id: str = "TrendTraderAgent_1",  # Updated agent_id
                  publisher: Any = None,
-                 timeframe: str = "W1", # Weekly default for Position Trader
-                 num_bars_to_fetch: int = 200, # e.g., ~4 years of weekly data
-                 ema_short_period: int = 12,  # e.g., 12-week EMA
-                 ema_long_period: int = 52,   # e.g., 52-week (1-year) EMA
-                 rsi_period: int = 14,    # Standard RSI period on the long timeframe
+                 timeframe: str = "D1",  # Changed timeframe to Daily
+                 num_bars_to_fetch: int = 200,
+                 ema_short_period: int = 20,  # Adjusted EMA short period
+                 ema_long_period: int = 50,   # Adjusted EMA long period
+                 rsi_period: int = 14,
                  rsi_oversold: int = 30,
                  rsi_overbought: int = 70,
-                 # MACD might still be useful on weekly/monthly charts
                  macd_fast: int = 12,
                  macd_slow: int = 26,
                  macd_signal: int = 9,
-                 stop_loss_pips: float = 500.0, # Very wide SL for position trades
-                 take_profit_pips: float = 1000.0, # Very wide TP
-                 fundamental_data_source: Optional[Any] = None # Placeholder for future use
+                 stop_loss_pips: float = 200.0,  # Adjusted stop_loss_pips
+                 take_profit_pips: float = 400.0, # Adjusted take_profit_pips
+                 fundamental_data_source: Optional[Any] = None
                 ):
         self.broker = broker
         self.agent_id = agent_id
@@ -43,9 +42,9 @@ class PositionTraderAgent:
         self.macd_signal = macd_signal
         self.stop_loss_pips = stop_loss_pips
         self.take_profit_pips = take_profit_pips
-        self.fundamental_data_source = fundamental_data_source # Store it
+        self.fundamental_data_source = fundamental_data_source
 
-        print(f"{self.agent_id} initialized. Broker: {type(self.broker)}, TF: {self.timeframe}, Bars: {self.num_bars_to_fetch}, EMAs: ({self.ema_short_period}/{self.ema_long_period}), SL: {self.stop_loss_pips}, TP: {self.take_profit_pips}, Fundamentals: {self.fundamental_data_source is not None}")
+        print(f"{self.agent_id} initialized. Broker: {type(self.broker)}, TF: {self.timeframe}, Bars: {self.num_bars_to_fetch}, EMAs: ({self.ema_short_period}/{self.ema_long_period}), SL: {self.stop_loss_pips}, TP: {self.take_profit_pips}, Fundamentals: {self.fundamental_data_source is not None}") # Updated print statement
 
     def _get_timeframe_seconds_approx(self, timeframe_str: str) -> int:
         timeframe_str = timeframe_str.upper()
@@ -56,10 +55,10 @@ class PositionTraderAgent:
         if "H1" == timeframe_str: return 60 * 60
         if "H4" == timeframe_str: return 4 * 60 * 60
         if "D1" == timeframe_str: return 24 * 60 * 60
-        if "W1" == timeframe_str: return 7 * 24 * 60 * 60 # Weekly
-        if "MN1" == timeframe_str: return 30 * 24 * 60 * 60 # Monthly (approx)
-        print(f"Warning: Unknown timeframe '{timeframe_str}' in _get_timeframe_seconds_approx for {self.agent_id}, defaulting to 1 week.")
-        return 7 * 24 * 60 * 60
+        if "W1" == timeframe_str: return 7 * 24 * 60 * 60
+        if "MN1" == timeframe_str: return 30 * 24 * 60 * 60
+        print(f"Warning: Unknown timeframe '{timeframe_str}' in _get_timeframe_seconds_approx for {self.agent_id}, defaulting to 1 day.") # Updated default warning
+        return 24 * 60 * 60 # Default to D1 if unknown
 
     def _calculate_pip_value_and_precision(self, currency_pair: str) -> Tuple[float, int]:
         pair_normalized = currency_pair.upper()
@@ -71,7 +70,7 @@ class PositionTraderAgent:
             return 0.0001, 5
 
     def process_task(self, state: Dict) -> Dict:
-        task: Optional[ForexSubAgentTask] = state.get("current_position_trader_task") # Expected key
+        task: Optional[ForexSubAgentTask] = state.get("current_trend_trader_task") # Changed task key
 
         supporting_data_for_proposal = {
             "params_used": {
@@ -85,16 +84,17 @@ class PositionTraderAgent:
         }
 
         if not task:
-            print(f"{self.agent_id}: No current_position_trader_task found in state.")
+            print(f"{self.agent_id}: No current_trend_trader_task found in state.") # Changed log message
             current_time_iso_prop = datetime.datetime.now(datetime.timezone.utc).isoformat()
             error_proposal = ForexTradeProposal(
-                proposal_id=f"prop_pos_err_{current_time_iso_prop.replace(':', '-')}",
-                source_agent_type="PositionTraderAgent", currency_pair="Unknown", timestamp=current_time_iso_prop,
+                proposal_id=f"prop_trend_err_{current_time_iso_prop.replace(':', '-')}", # Updated proposal_id prefix
+                source_agent_type="TrendTraderAgent", # Updated source_agent_type
+                currency_pair="Unknown", timestamp=current_time_iso_prop,
                 signal="HOLD", entry_price=None, stop_loss=None, take_profit=None, confidence_score=0.0,
                 rationale=f"{self.agent_id}: Task not found in state.", sub_agent_risk_level="Unknown",
                 supporting_data=supporting_data_for_proposal
             )
-            return {"position_trader_proposal": error_proposal, "error": f"{self.agent_id}: Task not found."}
+            return {"trend_trader_proposal": error_proposal, "error": f"{self.agent_id}: Task not found."} # Changed key for return
 
         currency_pair = task['currency_pair']
         task_id = task['task_id']
@@ -112,7 +112,7 @@ class PositionTraderAgent:
             try:
                 decision_time_dt = datetime.datetime.fromisoformat(current_simulated_time_iso.replace('Z', '+00:00'))
                 decision_time_unix = decision_time_dt.timestamp()
-                timeframe_duration_seconds = self._get_timeframe_seconds_approx(self.timeframe) # Uses the updated helper
+                timeframe_duration_seconds = self._get_timeframe_seconds_approx(self.timeframe)
 
                 end_historical_data_request_unix = decision_time_unix
                 start_historical_data_request_unix = end_historical_data_request_unix - (self.num_bars_to_fetch * timeframe_duration_seconds)
@@ -141,20 +141,17 @@ class PositionTraderAgent:
                 data_message = f"Error fetching data: {e}"
                 traceback.print_exc()
 
-        # --- START OF NEW TA CALCULATION & FUNDAMENTAL PLACEHOLDER LOGIC ---
         ta_message = "TA not performed."
         latest_indicators = {}
-        fundamental_message = "Fundamental analysis not yet integrated."
+        fundamental_message = "Fundamental analysis not yet integrated." # Trend traders may also use fundamentals
 
-        if self.fundamental_data_source: # Basic check on the placeholder
-            # In future, this would trigger actual fundamental data fetching & analysis
-            fundamental_message = "Fundamental data source configured but analysis pending implementation."
+        if self.fundamental_data_source:
+            fundamental_message = "Fundamental data source configured but analysis pending implementation for Trend Trader."
             print(f"{self.agent_id}: {fundamental_message} (Source: {self.fundamental_data_source})")
         else:
-            fundamental_message = "No fundamental data source configured for this agent."
+            fundamental_message = "No fundamental data source configured for this Trend Trader agent."
             print(f"{self.agent_id}: {fundamental_message}")
 
-        # Check if historical_data is not None and has enough data for the longest EMA
         if historical_data and len(historical_data) >= self.ema_long_period:
             try:
                 print(f"{self.agent_id}: Converting fetched data to DataFrame for TA...")
@@ -169,7 +166,7 @@ class PositionTraderAgent:
                 if not all(col in df.columns for col in required_ohlc):
                     raise ValueError(f"DataFrame is missing one or more required OHLC columns: {required_ohlc}")
 
-                print(f"{self.agent_id}: Calculating TA indicators for Position Trading (EMAs: {self.ema_short_period}/{self.ema_long_period}, RSI: {self.rsi_period} on {self.timeframe} chart)...")
+                print(f"{self.agent_id}: Calculating TA indicators for Trend Trading (EMAs: {self.ema_short_period}/{self.ema_long_period}, RSI: {self.rsi_period} on {self.timeframe} chart)...") # Updated log
                 df.ta.rsi(length=self.rsi_period, append=True, col_names=(f'RSI_{self.rsi_period}',))
                 df.ta.ema(length=self.ema_short_period, append=True, col_names=(f'EMA_{self.ema_short_period}',))
                 df.ta.ema(length=self.ema_long_period, append=True, col_names=(f'EMA_{self.ema_long_period}',))
@@ -178,7 +175,7 @@ class PositionTraderAgent:
                                       f'MACDH_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}',
                                       f'MACDS_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'))
 
-                if not df.empty and not df.iloc[-1].empty: # Check if last row is not empty
+                if not df.empty and not df.iloc[-1].empty:
                     last_row = df.iloc[-1]
                     price_precision_for_emas = self._calculate_pip_value_and_precision(currency_pair)[1]
                     rsi_col_name = f'RSI_{self.rsi_period}'
@@ -186,7 +183,6 @@ class PositionTraderAgent:
                     ema_l_col_name = f'EMA_{self.ema_long_period}'
                     macd_line_col_name = f'MACD_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'
                     macd_signal_col_name = f'MACDS_{self.macd_fast}_{self.macd_slow}_{self.macd_signal}'
-                    # Note: MACD hist is MACDH_...
 
                     latest_indicators = {
                         rsi_col_name: round(last_row[rsi_col_name], 2) if rsi_col_name in last_row and pd.notna(last_row[rsi_col_name]) else None,
@@ -194,9 +190,8 @@ class PositionTraderAgent:
                         ema_l_col_name: round(last_row[ema_l_col_name], price_precision_for_emas) if ema_l_col_name in last_row and pd.notna(last_row[ema_l_col_name]) else None,
                         'MACD_line': round(last_row[macd_line_col_name], price_precision_for_emas) if macd_line_col_name in last_row and pd.notna(last_row[macd_line_col_name]) else None,
                         'MACD_signal_line': round(last_row[macd_signal_col_name], price_precision_for_emas) if macd_signal_col_name in last_row and pd.notna(last_row[macd_signal_col_name]) else None,
-                        # Add MACD_hist if needed by strategy later
                     }
-                    ta_message = f"TA calculated for Position Trading. Latest RSI: {latest_indicators.get(rsi_col_name)}"
+                    ta_message = f"TA calculated for Trend Trading. Latest RSI: {latest_indicators.get(rsi_col_name)}" # Updated log
                     print(f"{self.agent_id}: {ta_message}")
                 else:
                     ta_message = "DataFrame was empty or last row was empty after TA calculation attempts."
@@ -212,84 +207,77 @@ class PositionTraderAgent:
         else:
             ta_message = "TA not performed as no historical data was available."
             print(f"{self.agent_id}: {ta_message}")
-        # --- END OF NEW TA CALCULATION & FUNDAMENTAL PLACEHOLDER LOGIC ---
 
-        # Update supporting_data with latest info before strategy
         supporting_data_for_proposal["data_fetch_info"] = data_message
         supporting_data_for_proposal["ta_calculation_info"] = ta_message
         supporting_data_for_proposal["fundamental_analysis_info"] = fundamental_message
         supporting_data_for_proposal.update(latest_indicators)
 
-        # --- START OF NEW POSITION TRADING STRATEGY RULE LOGIC ---
         final_signal = "HOLD"
-        final_confidence = 0.5 # Default confidence for HOLD
-        strategy_rationale_parts = [f"Position Strategy (TF: {self.timeframe}) based on EMAs ({self.ema_short_period}/{self.ema_long_period}), RSI ({self.rsi_period}, OB:{self.rsi_overbought},OS:{self.rsi_oversold}). Fundamentals: {fundamental_message}"]
+        final_confidence = 0.5
+        strategy_rationale_parts = [f"Trend Strategy (TF: {self.timeframe}) based on EMAs ({self.ema_short_period}/{self.ema_long_period}), RSI ({self.rsi_period}, OB:{self.rsi_overbought},OS:{self.rsi_oversold}). Fundamentals: {fundamental_message}"] # Updated rationale
 
         required_indicators = [
             f'EMA_{self.ema_short_period}', f'EMA_{self.ema_long_period}',
             f'RSI_{self.rsi_period}'
-            # MACD could also be added here if desired for position trading
         ]
 
         indicators_present = all(indicator_key in latest_indicators and latest_indicators[indicator_key] is not None for indicator_key in required_indicators)
 
         if not latest_indicators or not indicators_present:
-            strategy_rationale_parts.append("Not all indicators available for position strategy evaluation.")
-            print(f"{self.agent_id}: Skipping position strategy rules due to missing indicators. {latest_indicators}")
+            strategy_rationale_parts.append("Not all indicators available for trend strategy evaluation.") # Updated rationale
+            print(f"{self.agent_id}: Skipping trend strategy rules due to missing indicators. {latest_indicators}") # Updated log
         else:
             ema_short = latest_indicators[f'EMA_{self.ema_short_period}']
             ema_long = latest_indicators[f'EMA_{self.ema_long_period}']
             rsi = latest_indicators[f'RSI_{self.rsi_period}']
-            # macd_line = latest_indicators.get('MACD_line') # If using MACD
-            # macd_signal_line = latest_indicators.get('MACD_signal_line') # Corrected key if using MACD
 
-            # Position Trading Conditions (focus on longer-term trends)
+            # Trend Trading Conditions
+            is_uptrend_ema = ema_short > ema_long
+            is_rsi_ok_for_buy_trend = rsi > self.rsi_oversold # Buy into established trends, RSI confirming momentum (e.g. > 40-50)
+                                                         # and not extremely overbought (e.g. < 80 for D1)
+            is_downtrend_ema = ema_short < ema_long
+            is_rsi_ok_for_sell_trend = rsi < self.rsi_overbought # Sell into established trends, RSI confirming momentum (e.g. < 60-50)
+                                                          # and not extremely oversold (e.g. > 20 for D1)
 
-            # Buy Condition: Major trend is up (EMA short > EMA long on W1/MN1), RSI not extremely overbought for a long period.
-            is_major_uptrend_ema = ema_short > ema_long
-            # For position trades, RSI can stay "overbought" for long periods in strong trends.
-            # We might use a higher threshold or just ensure it's not at an absolute peak (e.g. < 85-90).
-            is_rsi_ok_for_buy = rsi < self.rsi_overbought # Using configured OB level, e.g. 70-80
-
-            # Sell Condition: Major trend is down, RSI not extremely oversold.
-            is_major_downtrend_ema = ema_short < ema_long
-            is_rsi_ok_for_sell = rsi > self.rsi_oversold # Using configured OS level, e.g. 20-30
-
-            if is_major_uptrend_ema and is_rsi_ok_for_buy: # Potentially add MACD confirmation
+            if is_uptrend_ema and rsi < self.rsi_overbought : # Primary: EMA crossover indicates uptrend. RSI not overbought.
                 final_signal = "BUY"
-                final_confidence = 0.70 # Position trades are typically fewer but might have higher conviction if all aligns
-                strategy_rationale_parts.append(f"BUY signal: Major trend bullish (EMA {self.ema_short_period} > EMA {self.ema_long_period} on {self.timeframe}).")
-                strategy_rationale_parts.append(f"RSI ({rsi:.2f}) indicates room for upside (Limit: < {self.rsi_overbought}).")
-                # if macd_line and macd_signal_line and macd_line > macd_signal_line:
-                #     strategy_rationale_parts.append("MACD confirms bullish momentum.")
-                # else:
-                #     strategy_rationale_parts.append("MACD confirmation pending or neutral.")
-                #     final_confidence -= 0.05 # Slightly reduce confidence if MACD not strongly confirming
+                final_confidence = 0.70
+                strategy_rationale_parts.append(f"BUY signal: Trend bullish (EMA {self.ema_short_period} > EMA {self.ema_long_period} on {self.timeframe}).")
+                strategy_rationale_parts.append(f"RSI ({rsi:.2f}) indicates ongoing momentum (Limit: < {self.rsi_overbought}).")
+                # Optionally, add MACD confirmation for trend strength
+                macd_line = latest_indicators.get('MACD_line')
+                macd_signal_line = latest_indicators.get('MACD_signal_line')
+                if macd_line and macd_signal_line and macd_line > macd_signal_line:
+                     strategy_rationale_parts.append("MACD confirms bullish momentum.")
+                else:
+                     strategy_rationale_parts.append("MACD confirmation pending or neutral for trend.")
+                     final_confidence -= 0.05
 
-            elif is_major_downtrend_ema and is_rsi_ok_for_sell: # Potentially add MACD confirmation
+
+            elif is_downtrend_ema and rsi > self.rsi_oversold: # Primary: EMA crossover indicates downtrend. RSI not oversold.
                 final_signal = "SELL"
                 final_confidence = 0.65
-                strategy_rationale_parts.append(f"SELL signal: Major trend bearish (EMA {self.ema_short_period} < EMA {self.ema_long_period} on {self.timeframe}).")
-                strategy_rationale_parts.append(f"RSI ({rsi:.2f}) indicates room for downside (Limit: > {self.rsi_oversold}).")
-                # if macd_line and macd_signal_line and macd_line < macd_signal_line:
-                #     strategy_rationale_parts.append("MACD confirms bearish momentum.")
-                # else:
-                #     strategy_rationale_parts.append("MACD confirmation pending or neutral.")
-                #     final_confidence -= 0.05
+                strategy_rationale_parts.append(f"SELL signal: Trend bearish (EMA {self.ema_short_period} < EMA {self.ema_long_period} on {self.timeframe}).")
+                strategy_rationale_parts.append(f"RSI ({rsi:.2f}) indicates ongoing momentum (Limit: > {self.rsi_oversold}).")
+                macd_line = latest_indicators.get('MACD_line')
+                macd_signal_line = latest_indicators.get('MACD_signal_line')
+                if macd_line and macd_signal_line and macd_line < macd_signal_line:
+                     strategy_rationale_parts.append("MACD confirms bearish momentum.")
+                else:
+                     strategy_rationale_parts.append("MACD confirmation pending or neutral for trend.")
+                     final_confidence -= 0.05
             else:
                 final_signal = "HOLD"
                 final_confidence = 0.5
-                strategy_rationale_parts.append("HOLD signal: Position trading conditions for long-term BUY or SELL not met.")
-                if not is_major_uptrend_ema and not is_major_downtrend_ema and ema_short is not None and ema_long is not None : strategy_rationale_parts.append("Long-term EMAs are not clearly directional.")
-                if is_major_uptrend_ema and not is_rsi_ok_for_buy : strategy_rationale_parts.append("Long-term uptrend EMA but RSI too high or other confirmations missing.")
-                if is_major_downtrend_ema and not is_rsi_ok_for_sell : strategy_rationale_parts.append("Long-term downtrend EMA but RSI too low or other confirmations missing.")
+                strategy_rationale_parts.append("HOLD signal: Trend trading conditions for BUY or SELL not clearly met.") # Updated rationale
+                if not is_uptrend_ema and not is_downtrend_ema and ema_short is not None and ema_long is not None : strategy_rationale_parts.append("EMAs are not clearly directional for trend.")
+                if is_uptrend_ema and not (rsi < self.rsi_overbought) : strategy_rationale_parts.append("Uptrend EMA but RSI too high or other confirmations missing for trend entry.")
+                if is_downtrend_ema and not (rsi > self.rsi_oversold) : strategy_rationale_parts.append("Downtrend EMA but RSI too low or other confirmations missing for trend entry.")
 
-
-        print(f"{self.agent_id}: Position Strategy decision: {final_signal}, Confidence: {final_confidence}")
+        print(f"{self.agent_id}: Trend Strategy decision: {final_signal}, Confidence: {final_confidence}") # Updated log
         strategy_rationale_message = " ".join(strategy_rationale_parts)
-        # --- END OF NEW POSITION TRADING STRATEGY RULE LOGIC ---
 
-        # --- START OF NEW PRICE/SL/TP CALCULATION LOGIC FOR POSITION TRADER ---
         entry_price_calc: Optional[float] = None
         stop_loss_calc: Optional[float] = None
         take_profit_calc: Optional[float] = None
@@ -314,14 +302,12 @@ class PositionTraderAgent:
                         stop_loss_calc = round(entry_price_calc + (self.stop_loss_pips * pip_value), price_precision)
                         take_profit_calc = round(entry_price_calc - (self.take_profit_pips * pip_value), price_precision)
 
-                    price_calculation_message = f"Entry: {entry_price_calc}, SL: {stop_loss_calc}, TP: {take_profit_calc} (pips SL: {self.stop_loss_pips}, TP: {self.take_profit_pips} for Position Trade)."
+                    price_calculation_message = f"Entry: {entry_price_calc}, SL: {stop_loss_calc}, TP: {take_profit_calc} (pips SL: {self.stop_loss_pips}, TP: {self.take_profit_pips} for Trend Trade)." # Updated log
                     print(f"{self.agent_id}: {price_calculation_message}")
                 else:
                     price_calculation_message = f"Could not get valid current tick data (ask/bid) for {currency_pair} to calculate SL/TP. Signal was {final_signal}."
                     print(f"{self.agent_id}: {price_calculation_message}")
-        # --- END OF NEW PRICE/SL/TP CALCULATION LOGIC FOR POSITION TRADER ---
 
-        # Update the ForexTradeProposal creation:
         current_time_iso_prop = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
         supporting_data_for_proposal["final_signal_determined"] = final_signal
@@ -334,8 +320,8 @@ class PositionTraderAgent:
         fundamental_msg_from_sup = supporting_data_for_proposal.get("fundamental_analysis_info", "Fundamental info N/A.")
 
         trade_proposal = ForexTradeProposal(
-            proposal_id=f"prop_pos_{currency_pair if currency_pair else 'UNKPAIR'}_{current_time_iso_prop.replace(':', '-')}",
-            source_agent_type="PositionTraderAgent",
+            proposal_id=f"prop_trend_{currency_pair if currency_pair else 'UNKPAIR'}_{current_time_iso_prop.replace(':', '-')}", # Updated proposal_id prefix
+            source_agent_type="TrendTraderAgent", # Updated source_agent_type
             currency_pair=currency_pair if currency_pair else "Unknown",
             timestamp=current_time_iso_prop,
             signal=final_signal,
@@ -344,11 +330,11 @@ class PositionTraderAgent:
             take_profit=take_profit_calc,
             take_profit_2=None,
             confidence_score=final_confidence,
-            rationale=f"PositionTraderAgent: {strategy_rationale_message} PriceCalc: {price_calculation_message} (Data: {data_fetch_msg} TA: {ta_calc_msg} Fundamentals: {fundamental_msg_from_sup})",
-            sub_agent_risk_level="High" if final_signal not in ["HOLD", None] else "Low",
+            rationale=f"TrendTraderAgent: {strategy_rationale_message} PriceCalc: {price_calculation_message} (Data: {data_fetch_msg} TA: {ta_calc_msg} Fundamentals: {fundamental_msg_from_sup})", # Updated rationale
+            sub_agent_risk_level="Medium" if final_signal not in ["HOLD", None] else "Low", # Trend trading might be Medium risk
             supporting_data=supporting_data_for_proposal
         )
 
-        print(f"{self.agent_id}: Generated proposal for {currency_pair} after strategy evaluation.") # Consistent print message
+        print(f"{self.agent_id}: Generated proposal for {currency_pair} after trend strategy evaluation.") # Updated log
 
-        return {"position_trader_proposal": trade_proposal}
+        return {"trend_trader_proposal": trade_proposal} # Changed key for return
