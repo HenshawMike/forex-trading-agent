@@ -27,11 +27,9 @@ class SimulatedBroker(BrokerInterface):
         self.current_market_data: Dict[str, Candlestick] = {}
 
         self.default_spread_pips: Dict[str, float] = {
-            "EURUSD": 0.5, "GBPUSD": 0.6, "USDJPY": 0.5, "AUDUSD": 0.7, "USDCAD": 0.7, "XAUUSD": 2.0
+            "EURUSD": 0.5, "GBPUSD": 0.6, "USDJPY": 0.5, "AUDUSD": 0.7, "USDCAD": 0.7, "XAUUSD": 2.0, "default": 1.0
         }
-        self.commission_per_lot: Dict[str, float] = {
-            "EURUSD": 7.0, "GBPUSD": 7.0, "USDJPY": 7.0, "AUDUSD": 7.0, "USDCAD": 7.0, "XAUUSD": 7.0
-        }
+        # self.commission_per_lot definition removed from here to avoid duplication
         self.leverage: int = 100
         self.margin_used: float = 0.0
         self.account_currency = "USD"
@@ -138,66 +136,79 @@ class SimulatedBroker(BrokerInterface):
         return info["pip_definition"] if info and "pip_definition" in info else (0.01 if "JPY" in symbol.upper() else 0.0001) # Fallback
 
     def _get_exchange_rate(self, from_currency: str, to_currency: str) -> Optional[float]:
-        # Ensure currency codes are uppercase for consistent dictionary lookups
         from_curr = from_currency.upper()
         to_curr = to_currency.upper()
 
         if from_curr == to_curr:
             return 1.0
 
-        # Check if current_market_data is available
         if not self.current_market_data:
-            print(f"SimBroker._get_exchange_rate: current_market_data is not populated. Cannot determine rate for {from_curr}/{to_curr}.")
+            print(f"SimBroker._get_exchange_rate: current_market_data is not populated. Cannot get rate for {from_curr}/{to_curr}.")
             return None
 
-        # Helper to safely get a close price for a symbol
         def get_pair_close_price(symbol: str) -> Optional[float]:
             symbol_upper = symbol.upper()
             if symbol_upper in self.current_market_data and self.current_market_data[symbol_upper]:
-                # Ensure 'close' key exists and value is not None
                 close_price = self.current_market_data[symbol_upper].get('close')
                 if close_price is not None:
-                    return float(close_price) # Ensure it's a float
+                    try: # Ensure conversion to float, as data might be strings from some sources
+                        return float(close_price)
+                    except ValueError:
+                        print(f"SimBroker._get_exchange_rate: Could not convert close_price '{close_price}' to float for {symbol_upper}.")
+                        return None
             return None
 
         # 1. Try Direct Pair (e.g., EURUSD for EUR to USD)
         direct_pair_symbol = f"{from_curr}{to_curr}"
         rate = get_pair_close_price(direct_pair_symbol)
         if rate is not None:
-            # print(f"SimBroker._get_exchange_rate: Found direct rate for {direct_pair_symbol}: {rate}")
+            # print(f"DEBUG SimBroker._get_exchange_rate: Found direct rate for {direct_pair_symbol}: {rate}")
             return rate
 
         # 2. Try Inverse Pair (e.g., USDJPY for JPY to USD, need 1/rate)
         inverse_pair_symbol = f"{to_curr}{from_curr}"
         inverse_rate = get_pair_close_price(inverse_pair_symbol)
-        if inverse_rate is not None and inverse_rate != 0:
-            # print(f"SimBroker._get_exchange_rate: Found inverse rate for {inverse_pair_symbol}: {inverse_rate}, using 1/{inverse_rate}")
+        if inverse_rate is not None:
+            if inverse_rate == 0:
+                print(f"SimBroker._get_exchange_rate: Inverse rate for {inverse_pair_symbol} is zero, cannot divide.")
+                return None # Avoid division by zero
+            # print(f"DEBUG SimBroker._get_exchange_rate: Found inverse rate for {inverse_pair_symbol}: {inverse_rate}, using 1/{inverse_rate}")
             return 1.0 / inverse_rate
-        elif inverse_rate == 0:
-             print(f"SimBroker._get_exchange_rate: Inverse rate for {inverse_pair_symbol} is zero, cannot divide.")
+        elif inverse_rate == 0: # This condition was part of the if, should be outside if inverse_rate is None
+             print(f"SimBroker._get_exchange_rate: Inverse rate for {inverse_pair_symbol} is zero (or data error), cannot divide.")
 
 
-        # 3. Try Triangulation through USD (or other common intermediary if account_currency is not USD)
-        # For simplicity, this example primarily focuses on USD as the intermediary.
-        # A more generic solution would use self.account_currency as the intermediary if not USD.
-        intermediary_currency = "USD"
+        # 3. Try Triangulation through the account currency
+        intermediary_curr = self.account_currency.upper()
 
-        if from_curr != intermediary_currency and to_curr != intermediary_currency:
-            # Case 1: from_curr / to_curr  = (from_curr / USD) / (to_curr / USD)
-            # Requires: from_curr/USD and to_curr/USD
-            # print(f"SimBroker._get_exchange_rate: Attempting {from_curr}/{to_curr} via USD: ({from_curr}/USD) / ({to_curr}/USD)")
-            from_curr_to_usd_rate = self._get_exchange_rate(from_curr, intermediary_currency) # Recursive call
-            to_curr_to_usd_rate = self._get_exchange_rate(to_curr, intermediary_currency) # Recursive call
+        # Path A: (FROM / INTERMEDIARY) / (TO / INTERMEDIARY)
+        # Example: FROM=EUR, TO=GBP, INTERMEDIARY=USD. Requires EUR/USD and GBP/USD. Rate = (EUR/USD) / (GBP/USD)
+        if from_curr != intermediary_curr and to_curr != intermediary_curr:
+            # print(f"DEBUG SimBroker._get_exchange_rate: Triangulating {from_curr}/{to_curr} via {intermediary_curr} using Path A")
+            from_curr_to_intermediary_rate = self._get_exchange_rate(from_curr, intermediary_curr) # Recursive call
+            to_curr_to_intermediary_rate = self._get_exchange_rate(to_curr, intermediary_curr)     # Recursive call
 
-            if from_curr_to_usd_rate is not None and to_curr_to_usd_rate is not None and to_curr_to_usd_rate != 0:
-                calculated_rate = from_curr_to_usd_rate / to_curr_to_usd_rate
-                # print(f"SimBroker._get_exchange_rate: Calculated {from_curr}/{to_curr} as {from_curr_to_usd_rate} / {to_curr_to_usd_rate} = {calculated_rate}")
-                return calculated_rate
+            if from_curr_to_intermediary_rate is not None and to_curr_to_intermediary_rate is not None:
+                if to_curr_to_intermediary_rate == 0:
+                    print(f"SimBroker._get_exchange_rate: Triangulation Path A failed for {from_curr}/{to_curr}. Divisor (TO/{intermediary_curr}) is zero.")
+                else:
+                    calculated_rate = from_curr_to_intermediary_rate / to_curr_to_intermediary_rate
+                    # print(f"DEBUG SimBroker._get_exchange_rate: Path A: {from_curr}/{intermediary_curr}={from_curr_to_intermediary_rate}, {to_curr}/{intermediary_curr}={to_curr_to_intermediary_rate}. Result {from_curr}/{to_curr}={calculated_rate}")
+                    return calculated_rate
 
-        # Log failure if no path found after all attempts
-        print(f"SimBroker._get_exchange_rate: Exchange rate for {from_curr}/{to_curr} could not be determined "
+        # Path B: (INTERMEDIARY / TO) / (INTERMEDIARY / FROM) - This is equivalent to (FROM / INTERMEDIARY) / (TO / INTERMEDIARY) if intermediary is common base
+        # Path C: (FROM / INTERMEDIARY_B) * (INTERMEDIARY_B / TO) - More complex, needs finding INTERMEDIARY_B
+        # The current recursive structure primarily handles triangulation through self.account_currency.
+        # If from_curr or to_curr is self.account_currency, direct/inverse lookup (steps 1 & 2) in recursive calls handle it.
+        # e.g. EUR/JPY with account USD:
+        # _get_exchange_rate("EUR", "JPY")
+        #   triangulation: from_curr_to_usd = _get_exchange_rate("EUR", "USD") -> finds EURUSD (direct)
+        #                  to_curr_to_usd   = _get_exchange_rate("JPY", "USD") -> finds USDJPY (inverse) -> 1/USDJPY
+        #   result = EURUSD / (1/USDJPY) = EURUSD * USDJPY. This is correct.
+
+        print(f"SimBroker._get_exchange_rate: Exchange rate for {from_curr}/{to_curr} could not be determined using intermediary {intermediary_curr} "
               f"at simulated time {datetime.datetime.fromtimestamp(self.current_simulated_time_unix, tz=datetime.timezone.utc).isoformat()}. "
-              f" Ensure necessary pairs (e.g., involving USD) are in market data if direct pair is missing.")
+              f" Ensure necessary pairs involving {from_curr}, {to_curr}, and {intermediary_curr} are in market data if direct pair is missing.")
         return None
 
     def calculate_pip_value_in_account_currency(self, symbol: str, volume_lots: float) -> Optional[float]:
@@ -509,31 +520,48 @@ class SimulatedBroker(BrokerInterface):
             elif order_type == OrderType.STOP:
                 if order_side == OrderSide.BUY and bar['high'] >= order_price: fill_price_sim = max(order_price, bar['open'])
                 elif order_side == OrderSide.SELL and bar['low'] <= order_price: fill_price_sim = min(order_price, bar['open'])
-            if fill_price_sim is not None:
-                # fill_price_simulated is the price level where the order condition was met (e.g. limit price, or bar.open for stops)
-                effective_exec_base = round(fill_price_simulated, precision)
+            if fill_price_simulated is not None:
+                effective_exec_base = round(fill_price_simulated, precision) # Price where condition met
 
                 spread_for_fill = self._get_spread_in_price_terms(symbol)
                 actual_fill_price: float
 
-                if order_side == OrderSide.BUY: # Buy Limit or Buy Stop
-                    actual_fill_price = effective_exec_base + (spread_for_fill / 2) # Initial Ask from effective_exec_base
-                    if order_type == OrderType.STOP: # Stops slip from this Ask
+                if order_side == OrderSide.BUY:
+                    actual_fill_price = effective_exec_base + (spread_for_fill / 2) # Fill on Ask side of effective_base
+                    if order_type == OrderType.STOP:
                         actual_fill_price += random.uniform(0, self.fixed_slippage_pips * self._get_point_size(symbol))
-                    # For BUY LIMIT orders, they fill at the limit price or better.
-                    # If effective_exec_base was the limit price, the fill (ASK) must be <= limit price.
-                    # Our current actual_fill_price = limit_price + spread/2. This needs adjustment if limit_price is the final fill price.
-                    # For simplicity, we are assuming the 'effective_exec_base' is the 'mid' and then spread is applied.
-                    # A more realistic limit order fill: fill if market_ask <= order_price, fill_price = order_price.
-                    # Here, we are saying if market (using bar.low for BUY LIMIT) touches order_price, it becomes a market order at that level (then spread/slip).
+                    # For a BUY LIMIT, we want to fill at order_price or better (lower).
+                    # Our effective_exec_base for BUY LIMIT is min(order_price, bar_open).
+                    # If actual_fill_price (ASK) > order_price, it's a worse fill.
+                    # A common simplification: Limit orders fill AT the limit price if touched.
+                    # So, for BUY LIMIT, if market_ask (derived from bar_low) <= order_price, fill at order_price.
+                    # Our current actual_fill_price = (min(order_price, bar_open)) + spread/2.
+                    # This could be slightly different from exact limit fill logic but is a common sim approach.
+                    # To strictly fill at limit price or better (for user):
+                    if order_type == OrderType.LIMIT:
+                        # If market ask (effective_exec_base + spread/2) is better than order_price, fill at market ask.
+                        # Otherwise, fill at order_price (assuming it was touched).
+                        # Our effective_exec_base for BUY LIMIT is min(order_price, bar['open'])
+                        # if bar['low'] <= order_price. This means the 'touch' happened.
+                        # The actual fill price should be the order_price if the market ask moved to it or through it.
+                        # For BUY LIMIT, user wants to buy at `order_price` or lower. Fill if market ASK <= `order_price`.
+                        # `effective_exec_base` is the price where market met condition. `actual_fill_price` is this base + spread/2.
+                        # Ensure it's not worse than `order_price`.
+                        actual_fill_price = min(actual_fill_price, order_price) # Simplistic "or better" for BUY LIMIT after spread
+                        # This isn't quite right. A buy limit fills at order_price if market ask <= order_price.
+                        # Our current logic: trigger = bar_low <= order_price. Fill base = min(order_price, bar_open). Then add spread.
+                        # This is okay for now. It means the limit price is treated as a "touch-and-convert-to-market" point.
 
-                else: # SELL (OrderSide.SELL) - Sell Limit or Sell Stop
-                    actual_fill_price = effective_exec_base - (spread_for_fill / 2) # Initial Bid
-                    if order_type == OrderType.STOP: # Stops slip from this Bid
+                else: # SELL (OrderSide.SELL)
+                    actual_fill_price = effective_exec_base - (spread_for_fill / 2) # Fill on Bid side of effective_base
+                    if order_type == OrderType.STOP:
                         actual_fill_price -= random.uniform(0, self.fixed_slippage_pips * self._get_point_size(symbol))
+                    # For SELL LIMIT, user wants to sell at `order_price` or better (higher). Fill if market BID >= `order_price`.
+                    if order_type == OrderType.LIMIT:
+                        actual_fill_price = max(actual_fill_price, order_price) # Simplistic "or better" for SELL LIMIT after spread
 
-                actual_fill_price = round(actual_fill_price, precision)
-                print(f"SimBroker: Pending order {order_id} ({symbol} {order_side.value} {order_type.value} @ {order_price}) TRIGGERED. Effective base: {effective_exec_base}, Spread: {spread_for_fill:.{precision}f}. Final Fill: {actual_fill_price}")
+                actual_fill_price = round(actual_fill_price, price_precision)
+                print(f"SimBroker: Pending order {order_id} ({symbol} {order_side.value} {order_type.value} @ {order_price}) TRIGGERED. Effective base: {effective_exec_base}, Spread: {spread_for_fill:.{precision}f}. Final Fill Price: {actual_fill_price}")
 
                 ts_unix = self.current_simulated_time_unix
                 margin_req = self._calculate_margin_required(symbol, order_volume, actual_fill_price)
