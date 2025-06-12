@@ -1,8 +1,8 @@
 from typing import List, Dict, Optional, Any, Tuple
 from tradingagents.broker_interface.base import BrokerInterface
 from tradingagents.forex_utils.forex_states import (
-    PriceTick, Candlestick, AccountInfo, OrderResponse, Position,
-    OrderType, OrderSide, TimeInForce
+    PriceTick, Candlestick, AccountInfo, OrderResponse, Position, FillDetails, # Added FillDetails
+    OrderType, OrderSide, TimeInForce, FillPolicy # Added FillPolicy
 )
 import datetime
 import time
@@ -458,15 +458,56 @@ class SimulatedBroker(BrokerInterface):
         margin_level = (self.equity / self.margin_used * 100) if self.margin_used > 0 else float('inf')
         return AccountInfo(account_id=self._generate_unique_id()[:8], balance=round(self.balance, 2), equity=round(self.equity, 2), margin=round(self.margin_used, 2), free_margin=round(free_margin, 2), margin_level=round(margin_level, 2) if margin_level != float('inf') else float('inf'), currency=self.account_currency)
 
-    def place_order(self, symbol: str, order_type: OrderType, side: OrderSide, volume: float,
-                      price: Optional[float] = None, stop_loss: Optional[float] = None,
-                      take_profit: Optional[float] = None, time_in_force: TimeInForce = TimeInForce.GTC,
-                      magic_number: Optional[int] = 0, comment: Optional[str] = "") -> OrderResponse:
+    def place_order(self,
+                      symbol: str,
+                      order_type: OrderType,
+                      side: OrderSide,
+                      volume: float,
+                      price: Optional[float] = None,
+                      stop_loss: Optional[float] = None,
+                      take_profit: Optional[float] = None,
+                      time_in_force: Optional[TimeInForce] = TimeInForce.GTC,
+                      fill_policy: Optional[FillPolicy] = FillPolicy.NORMAL,
+                      magic_number: Optional[int] = 0,
+                      comment: Optional[str] = "",
+                      client_order_id: Optional[str] = None
+                     ) -> OrderResponse:
+
         order_id = self._generate_unique_id()
-        timestamp_unix = self.current_simulated_time_unix
-        if not self.is_connected(): return OrderResponse(order_id=order_id, status="REJECTED", symbol=symbol, side=side, type=order_type, volume=volume, price=price, timestamp=timestamp_unix, error_message="Broker not connected.")
+        creation_timestamp = self.current_simulated_time_unix
+
+        # Prepare a base response
+        response = OrderResponse(
+            order_id=order_id,
+            client_order_id=client_order_id,
+            status="REJECTED", # Default to rejected, update on success
+            symbol=symbol,
+            order_type=order_type,
+            side=side,
+            requested_volume=volume,
+            filled_volume=0.0,
+            average_fill_price=None,
+            requested_price=price,
+            stop_loss_price=stop_loss,
+            take_profit_price=take_profit,
+            time_in_force=time_in_force or TimeInForce.GTC, # Ensure not None
+            fill_policy=fill_policy or FillPolicy.NORMAL, # Ensure not None
+            creation_timestamp=creation_timestamp,
+            last_update_timestamp=creation_timestamp,
+            fills=[],
+            error_message=None,
+            broker_native_response={"simulated_broker_comment": "Order received"},
+            position_id=None
+        )
+
+        if not self.is_connected():
+            response['error_message'] = "Broker not connected."
+            return response
+
         current_bar = self.current_market_data.get(symbol)
-        if not current_bar: return OrderResponse(order_id=order_id, status="REJECTED", symbol=symbol, side=side, type=order_type, volume=volume, price=price, timestamp=timestamp_unix, error_message=f"Market data not available for {symbol} at {datetime.datetime.fromtimestamp(timestamp_unix, tz=datetime.timezone.utc).isoformat()}.")
+        if not current_bar:
+            response['error_message'] = f"Market data not available for {symbol} at {datetime.datetime.fromtimestamp(creation_timestamp, tz=datetime.timezone.utc).isoformat()}."
+            return response
 
         price_precision = self._get_price_precision(symbol)
 
@@ -476,108 +517,236 @@ class SimulatedBroker(BrokerInterface):
             point_size = self._get_point_size(symbol)
             slippage_in_price = self.fixed_slippage_pips * point_size
             entry_price_final: float
-            if side == OrderSide.BUY: entry_price_final = round(fill_price_base + (spread_amount / 2) + random.uniform(0, slippage_in_price), price_precision)
-            elif side == OrderSide.SELL: entry_price_final = round(fill_price_base - (spread_amount / 2) - random.uniform(0, slippage_in_price), price_precision)
-            else: return OrderResponse(order_id=order_id, status="REJECTED", error_message="Invalid order side.")
+            if side == OrderSide.BUY:
+                entry_price_final = round(fill_price_base + (spread_amount / 2) + random.uniform(0, slippage_in_price), price_precision)
+            elif side == OrderSide.SELL:
+                entry_price_final = round(fill_price_base - (spread_amount / 2) - random.uniform(0, slippage_in_price), price_precision)
+            else: # Should not happen due to Enum
+                response['error_message'] = "Invalid order side."
+                return response
 
-            margin_for_this_trade = self._calculate_margin_required(symbol, volume, entry_price_final)
-            # Ensure equity/margin is current before checking free margin
-            self._update_equity_and_margin() # Call here to ensure fresh values before check
+            volume_to_fill = volume
+            simulated_available_volume = round(random.uniform(0.5, 1.5) * volume, 2) # Mock available volume
+
+            if fill_policy == FillPolicy.FOK:
+                # In this simple sim, if it passes margin, FOK fills fully.
+                # A more complex sim might check against a mock order book depth.
+                # For now, FOK will behave like NORMAL unless margin fails.
+                pass # volume_to_fill remains `volume`
+            elif fill_policy == FillPolicy.IOC:
+                volume_to_fill = min(volume, simulated_available_volume)
+                if volume_to_fill < 0.01 : # Min lot size
+                    response['error_message'] = f"IOC policy: No volume fillable at current market for {symbol} (available: {simulated_available_volume}, requested: {volume})."
+                    response['status'] = "REJECTED" # Or CANCELLED if IOC implies that for zero fill
+                    return response
+            # NORMAL: volume_to_fill remains `volume`
+
+            margin_for_this_trade = self._calculate_margin_required(symbol, volume_to_fill, entry_price_final)
+            self._update_equity_and_margin()
             free_margin = self.equity - self.margin_used
             if free_margin < margin_for_this_trade:
-                 return OrderResponse(order_id=order_id, status="REJECTED", symbol=symbol, side=side, type=order_type, volume=volume, price=entry_price_final, timestamp=timestamp_unix, error_message=f"Insufficient free margin. Need: {margin_for_this_trade:.2f}, Have: {free_margin:.2f}")
+                response['error_message'] = f"Insufficient free margin. Need: {margin_for_this_trade:.2f}, Have: {free_margin:.2f}"
+                return response
 
-            commission_cost = self._calculate_commission(symbol, volume)
+            commission_cost = self._calculate_commission(symbol, volume_to_fill)
             position_id = self._generate_unique_id()
-            new_position = Position(position_id=position_id, symbol=symbol, side=side, volume=volume, entry_price=entry_price_final, current_price=entry_price_final, profit_loss= -commission_cost, stop_loss=stop_loss, take_profit=take_profit, open_time=timestamp_unix, magic_number=magic_number, comment=comment)
-            self.open_positions[position_id] = new_position
+
+            fill_details = FillDetails(
+                fill_id=f"sim_fill_{order_id}",
+                fill_price=entry_price_final,
+                fill_volume=volume_to_fill,
+                fill_timestamp=creation_timestamp,
+                commission=commission_cost,
+                fee=0.0
+            )
+            response['fills'].append(fill_details)
+
+            response['status'] = "FILLED" if volume_to_fill == volume else "PARTIALLY_FILLED"
+            response['filled_volume'] = volume_to_fill
+            response['average_fill_price'] = entry_price_final
+            response['position_id'] = position_id
+            response['last_update_timestamp'] = creation_timestamp
+            response['broker_native_response'] = {"simulated_broker_comment": f"Market order executed. Spread: {spread_amount}, Slippage: {slippage_in_price}"}
+
+
+            # Create and store position (using a dictionary that conforms to Position TypedDict)
+            new_position_data: Position = { # Explicitly define keys to match Position TypedDict
+                'position_id': position_id,
+                'symbol': symbol,
+                'side': side,
+                'volume': volume_to_fill,
+                'entry_price': entry_price_final,
+                'current_price': entry_price_final, # Initial current_price
+                'profit_loss': -commission_cost, # Initial P/L is just commission
+                'stop_loss': stop_loss,
+                'take_profit': take_profit,
+                'open_time': creation_timestamp,
+                'magic_number': magic_number,
+                'comment': comment
+            }
+            self.open_positions[position_id] = new_position_data # Store as dict
+
             self.balance -= commission_cost
             self.margin_used += margin_for_this_trade
-            self._update_equity_and_margin()
-            self.trade_history.append({"event_type": "MARKET_ORDER_FILLED", "timestamp": timestamp_unix, "order_id": order_id, "position_id": position_id, "symbol": symbol, "side": side.value, "volume": volume, "fill_price": entry_price_final, "sl": stop_loss, "tp": take_profit, "commission": commission_cost, "comment": comment})
-            print(f"SimBroker: {side.value} {volume} {symbol} @ {entry_price_final} (spread/slip incl). PosID: {position_id}. Comm: {commission_cost:.2f}")
-            return OrderResponse(order_id=order_id, status="FILLED", symbol=symbol, side=side, type=order_type, volume=volume, price=entry_price_final, timestamp=timestamp_unix, error_message=None, position_id=position_id)
+            self._update_equity_and_margin() # Recalculate equity after balance change
+
+            self.trade_history.append({
+                "event_type": response['status'], # FILLED or PARTIALLY_FILLED
+                "timestamp": creation_timestamp, "order_id": order_id, "position_id": position_id,
+                "symbol": symbol, "side": side.value, "requested_volume": volume, "filled_volume": volume_to_fill,
+                "fill_price": entry_price_final, "sl": stop_loss, "tp": take_profit,
+                "commission": commission_cost, "comment": comment, "client_order_id": client_order_id
+            })
+            print(f"SimBroker: {side.value} {volume_to_fill} (req: {volume}) {symbol} @ {entry_price_final}. PosID: {position_id}. Comm: {commission_cost:.2f}. FillPolicy: {fill_policy.value if fill_policy else 'N/A'}")
+            return response
 
         elif order_type in [OrderType.LIMIT, OrderType.STOP]:
-            if price is None: return OrderResponse(order_id=order_id, status="REJECTED", error_message="Price required for pending orders.")
-            self.pending_orders[order_id] = {"order_id": order_id, "status": "PENDING", "symbol": symbol, "side": side, "type": order_type, "volume": volume, "price": price, "timestamp": timestamp_unix, "stop_loss": stop_loss, "take_profit": take_profit, "magic_number": magic_number, "comment": comment}
-            self.trade_history.append({"event_type": "PENDING_ORDER_PLACED", "timestamp": timestamp_unix, "order_id": order_id, "symbol": symbol, "side": side.value, "type": order_type.value, "volume": volume, "price": price, "sl": stop_loss, "tp": take_profit, "comment": comment})
+            if price is None:
+                response['error_message'] = "Price required for pending orders."
+                return response
+
+            # Store pending order with all necessary details
+            pending_order_details = {
+                "order_id": order_id, "client_order_id": client_order_id,
+                "status": "PENDING", "symbol": symbol, "side": side, "type": order_type,
+                "volume": volume, "price": price, "timestamp": creation_timestamp,
+                "stop_loss": stop_loss, "take_profit": take_profit,
+                "magic_number": magic_number, "comment": comment,
+                "time_in_force": time_in_force, "fill_policy": fill_policy
+            }
+            self.pending_orders[order_id] = pending_order_details
+
+            response['status'] = "PENDING"
+            response['broker_native_response'] = {"simulated_broker_comment": "Pending order accepted"}
+
+            self.trade_history.append({
+                "event_type": "PENDING_ORDER_PLACED", "timestamp": creation_timestamp, "order_id": order_id,
+                "symbol": symbol, "side": side.value, "type": order_type.value, "volume": volume,
+                "price": price, "sl": stop_loss, "tp": take_profit, "comment": comment, "client_order_id": client_order_id
+            })
             print(f"SimBroker: Pending {side.value} {order_type.value} for {volume} {symbol} @ {price} SL:{stop_loss} TP:{take_profit} placed. OrderID: {order_id}")
-            return OrderResponse(order_id=order_id, status="PENDING", symbol=symbol, side=side, type=order_type, volume=volume, price=price, timestamp=timestamp_unix, error_message=None)
-        return OrderResponse(order_id=order_id, status="REJECTED", error_message="Unsupported order type.")
+            return response
+
+        response['error_message'] = "Unsupported order type."
+        return response
 
     def process_pending_orders(self):
         if not self.current_market_data or not self.current_simulated_time_unix: return
         orders_to_remove_after_processing = []
-        for order_id, po_details in list(self.pending_orders.items()):
-            symbol, bar, order_price, order_type, order_side, order_volume = po_details['symbol'], self.current_market_data.get(po_details['symbol']), po_details['price'], po_details['type'], po_details['side'], po_details['volume']
+
+        for order_id, po_details_dict in list(self.pending_orders.items()):
+            # Ensure po_details_dict has all necessary keys before accessing
+            symbol = po_details_dict['symbol']
+            bar = self.current_market_data.get(symbol)
+            order_price = po_details_dict['price']
+            order_type: OrderType = po_details_dict['type'] # Already OrderType enum
+            order_side: OrderSide = po_details_dict['side'] # Already OrderSide enum
+            order_volume = po_details_dict['volume']
+
+            # Retrieve fill_policy, default if missing (should not happen with new place_order)
+            order_fill_policy: FillPolicy = po_details_dict.get('fill_policy', FillPolicy.NORMAL)
+
             if not bar: continue
-            sl_pos, tp_pos, magic_pos, comment_pos = po_details.get('stop_loss'), po_details.get('take_profit'), po_details.get('magic_number'), po_details.get('comment', f"Filled from pending {order_id}")
-            fill_price_sim: Optional[float] = None; precision = self._get_price_precision(symbol)
+
+            sl_pos = po_details_dict.get('stop_loss')
+            tp_pos = po_details_dict.get('take_profit')
+            magic_pos = po_details_dict.get('magic_number')
+            comment_pos = po_details_dict.get('comment', f"Filled from pending {order_id}")
+            client_oid = po_details_dict.get('client_order_id')
+
+            fill_price_sim: Optional[float] = None
+            precision = self._get_price_precision(symbol)
+
             if order_type == OrderType.LIMIT:
                 if order_side == OrderSide.BUY and bar['low'] <= order_price: fill_price_sim = min(order_price, bar['open'])
                 elif order_side == OrderSide.SELL and bar['high'] >= order_price: fill_price_sim = max(order_price, bar['open'])
             elif order_type == OrderType.STOP:
                 if order_side == OrderSide.BUY and bar['high'] >= order_price: fill_price_sim = max(order_price, bar['open'])
                 elif order_side == OrderSide.SELL and bar['low'] <= order_price: fill_price_sim = min(order_price, bar['open'])
-            if fill_price_simulated is not None:
-                effective_exec_base = round(fill_price_simulated, precision) # Price where condition met
 
+            if fill_price_sim is not None: # Triggered # Corrected variable name here
+                effective_exec_base = round(fill_price_sim, precision)
                 spread_for_fill = self._get_spread_in_price_terms(symbol)
                 actual_fill_price: float
 
                 if order_side == OrderSide.BUY:
-                    actual_fill_price = effective_exec_base + (spread_for_fill / 2) # Fill on Ask side of effective_base
-                    if order_type == OrderType.STOP:
+                    actual_fill_price = effective_exec_base + (spread_for_fill / 2)
+                    if order_type == OrderType.STOP: # Apply slippage for stop orders
                         actual_fill_price += random.uniform(0, self.fixed_slippage_pips * self._get_point_size(symbol))
-                    # For a BUY LIMIT, we want to fill at order_price or better (lower).
-                    # Our effective_exec_base for BUY LIMIT is min(order_price, bar_open).
-                    # If actual_fill_price (ASK) > order_price, it's a worse fill.
-                    # A common simplification: Limit orders fill AT the limit price if touched.
-                    # So, for BUY LIMIT, if market_ask (derived from bar_low) <= order_price, fill at order_price.
-                    # Our current actual_fill_price = (min(order_price, bar_open)) + spread/2.
-                    # This could be slightly different from exact limit fill logic but is a common sim approach.
-                    # To strictly fill at limit price or better (for user):
-                    if order_type == OrderType.LIMIT:
-                        # If market ask (effective_exec_base + spread/2) is better than order_price, fill at market ask.
-                        # Otherwise, fill at order_price (assuming it was touched).
-                        # Our effective_exec_base for BUY LIMIT is min(order_price, bar['open'])
-                        # if bar['low'] <= order_price. This means the 'touch' happened.
-                        # The actual fill price should be the order_price if the market ask moved to it or through it.
-                        # For BUY LIMIT, user wants to buy at `order_price` or lower. Fill if market ASK <= `order_price`.
-                        # `effective_exec_base` is the price where market met condition. `actual_fill_price` is this base + spread/2.
-                        # Ensure it's not worse than `order_price`.
-                        actual_fill_price = min(actual_fill_price, order_price) # Simplistic "or better" for BUY LIMIT after spread
-                        # This isn't quite right. A buy limit fills at order_price if market ask <= order_price.
-                        # Our current logic: trigger = bar_low <= order_price. Fill base = min(order_price, bar_open). Then add spread.
-                        # This is okay for now. It means the limit price is treated as a "touch-and-convert-to-market" point.
-
-                else: # SELL (OrderSide.SELL)
-                    actual_fill_price = effective_exec_base - (spread_for_fill / 2) # Fill on Bid side of effective_base
-                    if order_type == OrderType.STOP:
+                    if order_type == OrderType.LIMIT: # Ensure limit price or better
+                        actual_fill_price = min(actual_fill_price, order_price)
+                else: # SELL
+                    actual_fill_price = effective_exec_base - (spread_for_fill / 2)
+                    if order_type == OrderType.STOP: # Apply slippage for stop orders
                         actual_fill_price -= random.uniform(0, self.fixed_slippage_pips * self._get_point_size(symbol))
-                    # For SELL LIMIT, user wants to sell at `order_price` or better (higher). Fill if market BID >= `order_price`.
-                    if order_type == OrderType.LIMIT:
-                        actual_fill_price = max(actual_fill_price, order_price) # Simplistic "or better" for SELL LIMIT after spread
+                    if order_type == OrderType.LIMIT: # Ensure limit price or better
+                        actual_fill_price = max(actual_fill_price, order_price)
 
-                actual_fill_price = round(actual_fill_price, price_precision)
-                print(f"SimBroker: Pending order {order_id} ({symbol} {order_side.value} {order_type.value} @ {order_price}) TRIGGERED. Effective base: {effective_exec_base}, Spread: {spread_for_fill:.{precision}f}. Final Fill Price: {actual_fill_price}")
+                actual_fill_price = round(actual_fill_price, precision)
+
+                volume_to_fill = order_volume
+                simulated_available_volume_at_price = round(random.uniform(0.5, 1.5) * order_volume, 2)
+
+                if order_fill_policy == FillPolicy.FOK:
+                    if simulated_available_volume_at_price < order_volume:
+                        print(f"SimBroker: Pending FOK order {order_id} ({symbol}) could not be filled entirely ({simulated_available_volume_at_price} < {order_volume}). Order cancelled.")
+                        self.trade_history.append({"event_type": "PENDING_ORDER_CANCELLED_FOK", "timestamp": self.current_simulated_time_unix, "order_id": order_id, "symbol": symbol, "reason": "FOK not fillable"})
+                        orders_to_remove_after_processing.append(order_id)
+                        continue
+                elif order_fill_policy == FillPolicy.IOC:
+                    volume_to_fill = min(order_volume, simulated_available_volume_at_price)
+                    if volume_to_fill < 0.01: # Min lot size
+                        print(f"SimBroker: Pending IOC order {order_id} ({symbol}) has zero fillable volume. Order cancelled.")
+                        self.trade_history.append({"event_type": "PENDING_ORDER_CANCELLED_IOC", "timestamp": self.current_simulated_time_unix, "order_id": order_id, "symbol": symbol, "reason": "IOC zero fillable"})
+                        orders_to_remove_after_processing.append(order_id)
+                        continue
+                # NORMAL: volume_to_fill remains order_volume
+
+                print(f"SimBroker: Pending order {order_id} ({symbol} {order_side.value} {order_type.value} @ {order_price}) TRIGGERED. FillPolicy: {order_fill_policy.value}. Vol to Fill: {volume_to_fill}. Fill Price: {actual_fill_price}")
 
                 ts_unix = self.current_simulated_time_unix
-                margin_req = self._calculate_margin_required(symbol, order_volume, actual_fill_price)
-                self._update_equity_and_margin() # Ensure fresh equity/margin for check
+                margin_req = self._calculate_margin_required(symbol, volume_to_fill, actual_fill_price)
+                self._update_equity_and_margin()
                 free_margin = self.equity - self.margin_used
+
                 if free_margin < margin_req:
                     print(f"SimBroker: Insufficient margin for pending {order_id}. Need: {margin_req:.2f}, Have: {free_margin:.2f}. Removed.")
-                    self.trade_history.append({"event_type": "PENDING_ORDER_FAIL_MARGIN", "timestamp": ts_unix, "order_id": order_id, "symbol": symbol, "side": order_side.value, "volume": order_volume, "trigger_price": fill_price_sim, "reason": "Insufficient margin"})
-                    orders_to_remove_after_processing.append(order_id); continue
-                commission = self._calculate_commission(symbol, order_volume); pos_id = self._generate_unique_id()
-                new_pos = Position(position_id=pos_id, symbol=symbol, side=order_side, volume=order_volume, entry_price=actual_fill, current_price=actual_fill, profit_loss= -commission, stop_loss=sl_pos, take_profit=tp_pos, open_time=ts_unix, magic_number=magic_pos, comment=comment_pos)
-                self.open_positions[pos_id] = new_pos; self.balance -= commission; self.margin_used += margin_req
+                    self.trade_history.append({"event_type": "PENDING_ORDER_FAIL_MARGIN", "timestamp": ts_unix, "order_id": order_id, "symbol": symbol, "side": order_side.value, "volume": volume_to_fill, "trigger_price": fill_price_sim, "reason": "Insufficient margin"})
+                    orders_to_remove_after_processing.append(order_id)
+                    continue
+
+                commission = self._calculate_commission(symbol, volume_to_fill)
+                pos_id = self._generate_unique_id()
+
+                # Create Position data (dictionary)
+                new_pos_data: Position = {
+                    'position_id': pos_id, 'symbol': symbol, 'side': order_side,
+                    'volume': volume_to_fill, 'entry_price': actual_fill_price,
+                    'current_price': actual_fill_price, 'profit_loss': -commission,
+                    'stop_loss': sl_pos, 'take_profit': tp_pos, 'open_time': ts_unix,
+                    'magic_number': magic_pos, 'comment': comment_pos
+                }
+                self.open_positions[pos_id] = new_pos_data
+
+                self.balance -= commission
+                self.margin_used += margin_req
                 self._update_equity_and_margin()
-                self.trade_history.append({"event_type": "PENDING_ORDER_FILLED", "timestamp": ts_unix, "original_order_id": order_id, "position_id": pos_id, "symbol": symbol, "side": order_side.value, "type": order_type.value, "volume": order_volume, "requested_price": order_price, "fill_price": actual_fill, "sl": sl_pos, "tp": tp_pos, "commission": commission, "comment": comment_pos})
-                print(f"SimBroker: Pending order {order_id} FILLED. New PosID: {pos_id} for {symbol} {order_side.value} {order_volume} @ {actual_fill}. Comm: {commission:.2f}")
+
+                status_str = "FILLED"
+                if order_fill_policy == FillPolicy.IOC and volume_to_fill < order_volume:
+                    status_str = "PARTIALLY_FILLED_IOC" # More specific status
+
+                self.trade_history.append({
+                    "event_type": f"PENDING_ORDER_{status_str}", "timestamp": ts_unix,
+                    "original_order_id": order_id, "client_order_id": client_oid, "position_id": pos_id,
+                    "symbol": symbol, "side": order_side.value, "type": order_type.value,
+                    "requested_volume": order_volume, "filled_volume": volume_to_fill,
+                    "requested_price": order_price, "fill_price": actual_fill_price, "sl": sl_pos, "tp": tp_pos,
+                    "commission": commission, "comment": comment_pos
+                })
+                print(f"SimBroker: Pending order {order_id} {status_str}. New PosID: {pos_id} for {symbol} {order_side.value} {volume_to_fill} @ {actual_fill_price}. Comm: {commission:.2f}")
                 orders_to_remove_after_processing.append(order_id)
+
         for oid in orders_to_remove_after_processing:
             if oid in self.pending_orders: del self.pending_orders[oid]
 
@@ -649,51 +818,155 @@ class SimulatedBroker(BrokerInterface):
 
     def modify_order(self, order_id: str, new_price: Optional[float] = None, new_stop_loss: Optional[float] = None, new_take_profit: Optional[float] = None) -> OrderResponse:
         ts = self.current_simulated_time_unix
-        if order_id in self.open_positions:
-            pos = self.open_positions[order_id]
-            if new_stop_loss is not None: pos['stop_loss'] = new_stop_loss
-            if new_take_profit is not None: pos['take_profit'] = new_take_profit
-            return OrderResponse(order_id=order_id, status="MODIFIED", symbol=pos['symbol'], side=pos['side'], type=OrderType.MARKET, volume=pos['volume'], price=pos['entry_price'], timestamp=ts, position_id=order_id)
-        elif order_id in self.pending_orders:
-            po = self.pending_orders[order_id]
-            if new_price is not None: po['price'] = new_price
-            if new_stop_loss is not None: po['stop_loss'] = new_stop_loss
-            if new_take_profit is not None: po['take_profit'] = new_take_profit
-            return OrderResponse(order_id=order_id, status="MODIFIED_PENDING", symbol=po['symbol'], side=po['side'], type=po['type'], volume=po['volume'], price=po['price'], timestamp=ts)
-        return OrderResponse(order_id=order_id, status="REJECTED", error_message="Order/Position not found.", timestamp=ts)
 
-    def _close_position_at_price(self, position: Position, close_price: float, reason: str):
-        current_position_id = position.position_id
+        if order_id in self.open_positions:
+            pos_data = self.open_positions[order_id] # This is a dict
+            original_type = OrderType.MARKET # Positions are results of market or filled pending orders
+
+            if new_stop_loss is not None: pos_data['stop_loss'] = new_stop_loss
+            if new_take_profit is not None: pos_data['take_profit'] = new_take_profit
+
+            # Position objects don't have a fill_policy or client_order_id in current Position TypedDict
+            # So we use defaults or None for the OrderResponse
+            return OrderResponse(
+                order_id=order_id, # Position ID used as order_id for context
+                client_order_id=None, # Not typically stored with position objects directly
+                status="MODIFIED",
+                symbol=pos_data['symbol'],
+                order_type=original_type, # Reflect it was a modification on an existing position
+                side=pos_data['side'],
+                requested_volume=pos_data['volume'], # Original volume
+                filled_volume=pos_data['volume'], # Fully filled to be open
+                average_fill_price=pos_data['entry_price'],
+                requested_price=pos_data['entry_price'], # Entry price as requested for this context
+                stop_loss_price=pos_data['stop_loss'],
+                take_profit_price=pos_data['take_profit'],
+                time_in_force=TimeInForce.GTC, # Default for positions
+                fill_policy=FillPolicy.NORMAL, # Default for positions
+                creation_timestamp=pos_data['open_time'], # Position open time
+                last_update_timestamp=ts,
+                fills=[], # Modification doesn't create new fills usually
+                error_message=None,
+                broker_native_response={"simulated_broker_comment": "Position SL/TP updated"},
+                position_id=order_id
+            )
+        elif order_id in self.pending_orders:
+            po_data = self.pending_orders[order_id] # This is a dict
+
+            if new_price is not None: po_data['price'] = new_price
+            if new_stop_loss is not None: po_data['stop_loss'] = new_stop_loss
+            if new_take_profit is not None: po_data['take_profit'] = new_take_profit
+
+            # Reconstruct OrderResponse from pending order data
+            return OrderResponse(
+                order_id=order_id,
+                client_order_id=po_data.get('client_order_id'),
+                status="MODIFIED_PENDING",
+                symbol=po_data['symbol'],
+                order_type=po_data['type'],
+                side=po_data['side'],
+                requested_volume=po_data['volume'],
+                filled_volume=0.0, # Pending orders are not filled
+                average_fill_price=None,
+                requested_price=po_data['price'],
+                stop_loss_price=po_data['stop_loss'],
+                take_profit_price=po_data['take_profit'],
+                time_in_force=po_data.get('time_in_force', TimeInForce.GTC),
+                fill_policy=po_data.get('fill_policy', FillPolicy.NORMAL),
+                creation_timestamp=po_data['timestamp'],
+                last_update_timestamp=ts,
+                fills=[],
+                error_message=None,
+                broker_native_response={"simulated_broker_comment": "Pending order parameters updated"},
+                position_id=None
+            )
+
+        # Fallback if order_id not found
+        return OrderResponse(
+            order_id=order_id, client_order_id=None, status="REJECTED", symbol="", order_type=OrderType.MARKET, # Dummy values
+            side=OrderSide.BUY, requested_volume=0, filled_volume=0, average_fill_price=None, requested_price=None,
+            stop_loss_price=None, take_profit_price=None, time_in_force=TimeInForce.GTC, fill_policy=FillPolicy.NORMAL,
+            creation_timestamp=ts, last_update_timestamp=ts, fills=[], error_message="Order/Position not found.",
+            broker_native_response=None, position_id=None
+        )
+
+    def _close_position_at_price(self, position_data: Position, close_price: float, reason: str, volume_to_close: Optional[float] = None) -> Tuple[Optional[float], Optional[FillDetails]]:
+        current_position_id = position_data['position_id'] # type: ignore
+
         if current_position_id not in self.open_positions:
             print(f"SimBroker: Position {current_position_id} already actioned or does not exist. Cannot close for reason: {reason}.")
-            return
+            return None, None
 
-        realized_pnl = self.calculate_pnl_in_account_currency(position.symbol, position.side, position.volume, position.entry_price, close_price)
+        actual_volume_closed = volume_to_close if volume_to_close is not None and volume_to_close <= position_data['volume'] else position_data['volume'] # type: ignore
+        if actual_volume_closed < 0.01: # min lot
+             print(f"SimBroker: Volume to close for {current_position_id} is too small ({actual_volume_closed}). No action taken.")
+             return None, None
+
+
+        realized_pnl = self.calculate_pnl_in_account_currency(position_data['symbol'], position_data['side'], actual_volume_closed, position_data['entry_price'], close_price) # type: ignore
 
         if realized_pnl is None:
-            print(f"SimBroker: PNL calculation failed for closing pos {current_position_id} ({position.symbol}). Realized PNL recorded as 0.0. Position will still be closed.")
-            realized_pnl = 0.0 # Set PNL to 0.0 for accounting if calculation failed, but still close position
+            print(f"SimBroker: PNL calculation failed for closing pos {current_position_id} ({position_data['symbol']}). Realized PNL recorded as 0.0. Position will still be closed/adjusted.") # type: ignore
+            realized_pnl = 0.0
 
-        self.balance += realized_pnl
-        margin_freed = self._calculate_margin_required(position.symbol, position.volume, position.entry_price)
-        self.margin_used -= margin_freed
-        if self.margin_used < 0: self.margin_used = 0
+        commission_for_closure = self._calculate_commission(position_data['symbol'], actual_volume_closed) # type: ignore
+        net_pnl_after_commission = realized_pnl - commission_for_closure # Commission is a cost
 
-        open_time_log = position.get('open_time', self.current_simulated_time_unix)
-        comment_log = position.get('comment', "")
-        magic_log = position.get('magic_number', 0)
+        self.balance += net_pnl_after_commission # PNL already includes cost of spread, now subtract commission for this part of trade cycle
 
-        self.trade_history.append({"event_type": "POSITION_CLOSED", "timestamp": self.current_simulated_time_unix, "position_id": current_position_id, "symbol": position.symbol, "side": position.side.value, "volume": position.volume, "entry_price": position.entry_price, "open_time": open_time_log, "close_price": close_price, "realized_pnl": realized_pnl, "reason_for_close": reason, "magic_number": magic_log, "comment": comment_log})
+        original_pos_volume = position_data['volume'] # type: ignore
+        margin_freed_ratio = actual_volume_closed / original_pos_volume
+        original_margin_for_pos = self._calculate_margin_required(position_data['symbol'], original_pos_volume, position_data['entry_price']) # type: ignore
+        margin_freed_this_close = original_margin_for_pos * margin_freed_ratio
 
-        del self.open_positions[current_position_id]
-        print(f"SimBroker: Position {current_position_id} ({position.symbol} {position.side.value} {position.volume} lot(s)) CLOSED at {close_price} by {reason}. P/L: {realized_pnl:.2f}. Margin Freed: {margin_freed:.2f}")
+        self.margin_used -= margin_freed_this_close
+        if self.margin_used < 0.005 : self.margin_used = 0.0 # Threshold to avoid tiny float residuals
+
+        fill_ts = self.current_simulated_time_unix
+        closed_fill_details = FillDetails(
+            fill_id=f"sim_fill_close_{current_position_id}_{str(uuid.uuid4())[:4]}",
+            fill_price=close_price,
+            fill_volume=actual_volume_closed,
+            fill_timestamp=fill_ts,
+            commission=commission_for_closure, # Commission for this closing part
+            fee=0.0
+        )
+
+        self.trade_history.append({
+            "event_type": "POSITION_CLOSED_PARTIAL" if actual_volume_closed < original_pos_volume else "POSITION_CLOSED_FULL",
+            "timestamp": fill_ts, "position_id": current_position_id,
+            "symbol": position_data['symbol'], "side": position_data['side'].value,  # type: ignore
+            "closed_volume": actual_volume_closed, "remaining_volume": original_pos_volume - actual_volume_closed,
+            "entry_price": position_data['entry_price'], "open_time": position_data['open_time'],  # type: ignore
+            "close_price": close_price, "realized_pnl": realized_pnl, "commission_on_close": commission_for_closure,
+            "reason_for_close": reason,
+            "magic_number": position_data.get('magic_number',0), "comment": position_data.get('comment',"") # type: ignore
+        })
+
+        if actual_volume_closed < original_pos_volume:
+            self.open_positions[current_position_id]['volume'] = round(original_pos_volume - actual_volume_closed, 2)
+            # PNL for remaining part needs to be based on remaining volume.
+            # The 'profit_loss' field in Position should reflect unrealized PNL of the open portion.
+            # For simplicity, current _update_equity_and_margin will handle this.
+            print(f"SimBroker: Position {current_position_id} ({position_data['symbol']}) PARTIALLY CLOSED {actual_volume_closed} lots at {close_price} by {reason}. P/L (this part): {realized_pnl:.2f}. Comm: {commission_for_closure:.2f}. Remaining vol: {self.open_positions[current_position_id]['volume']:.2f}")
+        else:
+            del self.open_positions[current_position_id]
+            print(f"SimBroker: Position {current_position_id} ({position_data['symbol']}) FULLY CLOSED at {close_price} by {reason}. P/L: {realized_pnl:.2f}. Comm: {commission_for_closure:.2f}. Margin Freed: {margin_freed_this_close:.2f}")
+
         self._update_equity_and_margin()
+        return realized_pnl, closed_fill_details
+
 
     def check_for_sl_tp_triggers(self):
         if not self.current_market_data or not self.current_simulated_time_unix: return
         positions_to_action = []
-        for pos_id, pos_data in list(self.open_positions.items()):
-            pos = Position(**pos_data) if isinstance(pos_data, dict) else pos_data
+        for pos_id, pos_data_dict in list(self.open_positions.items()):
+            # Ensure pos_data_dict is a dict before trying to construct Position from it
+            # if not isinstance(pos_data_dict, dict):
+            #    print(f"SimBroker Warning: pos_data for {pos_id} is not a dict, skipping SL/TP check. Data: {pos_data_dict}")
+            #    continue
+            pos = Position(**pos_data_dict) # Construct Position TypedDict instance for type safety
+
             if pos.symbol not in self.current_market_data: continue
             bar = self.current_market_data[pos.symbol]
             trigger_price = None; reason = None
@@ -703,25 +976,76 @@ class SimulatedBroker(BrokerInterface):
             elif pos.side == OrderSide.SELL:
                 if pos.stop_loss is not None and bar['high'] >= pos.stop_loss: trigger_price, reason = pos.stop_loss, "STOP_LOSS_HIT"
                 elif pos.take_profit is not None and bar['low'] <= pos.take_profit: trigger_price, reason = pos.take_profit, "TAKE_PROFIT_HIT"
-            if trigger_price is not None: positions_to_action.append({"position_to_close": pos, "close_price": trigger_price, "reason": reason})
-        for item in positions_to_action: self._close_position_at_price(item["position_to_close"], item["close_price"], item["reason"])
+
+            if trigger_price is not None:
+                positions_to_action.append({"position_to_close_data": pos_data_dict, "close_price": trigger_price, "reason": reason}) # Pass dict data
+
+        for item in positions_to_action:
+            # Pass the original dict from self.open_positions to _close_position_at_price
+            # as it expects a mutable dict if partial closes are to update the original entry.
+            # However, _close_position_at_price expects Position TypedDict for its first arg type hint.
+            # We need to ensure consistency. If open_positions stores dicts, _close_position_at_price should handle dicts.
+            # For now, constructing Position from dict when calling _close_position_at_price.
+            position_obj_for_closing = Position(**item["position_to_close_data"])
+            self._close_position_at_price(position_obj_for_closing, item["close_price"], item["reason"])
+
 
     def close_order(self, order_id: str, volume: Optional[float] = None, price: Optional[float] = None) -> OrderResponse: # order_id here is position_id
-        if order_id not in self.open_positions: return OrderResponse(order_id=order_id, status="REJECTED", error_message="Position not found.")
-        pos_to_close = Position(**self.open_positions[order_id]) if isinstance(self.open_positions[order_id], dict) else self.open_positions[order_id]
-        current_bar = self.current_market_data.get(pos_to_close.symbol)
-        if not current_bar: return OrderResponse(order_id=order_id, status="REJECTED", error_message="Market data unavailable.")
+        ts = self.current_simulated_time_unix
+        base_response_args = {"order_id": order_id, "client_order_id": None, "creation_timestamp": ts, "last_update_timestamp": ts, "broker_native_response": None, "fills": []}
+
+        if order_id not in self.open_positions:
+            return OrderResponse(status="REJECTED", error_message="Position not found.", symbol="", order_type=OrderType.MARKET, side=OrderSide.BUY, requested_volume=0, filled_volume=0, **base_response_args) # type: ignore
+
+        pos_to_close_data = self.open_positions[order_id] # This is a dict
+        pos_to_close_obj = Position(**pos_to_close_data) # Create Position object for type safety
+
+        current_bar = self.current_market_data.get(pos_to_close_obj.symbol)
+        if not current_bar:
+            return OrderResponse(status="REJECTED", error_message="Market data unavailable.", symbol=pos_to_close_obj.symbol, order_type=OrderType.MARKET, side=pos_to_close_obj.side, requested_volume=pos_to_close_obj.volume, filled_volume=0, **base_response_args) # type: ignore
 
         close_price_to_use = price
         if close_price_to_use is None: # Market close
-            spread_amount = self._get_spread_in_price_terms(pos_to_close.symbol)
+            spread_amount = self._get_spread_in_price_terms(pos_to_close_obj.symbol)
             close_price_base = current_bar['close']
-            close_price_to_use = (close_price_base - spread_amount / 2) if pos_to_close.side == OrderSide.BUY else (close_price_base + spread_amount / 2)
-            close_price_to_use = round(close_price_to_use, self._get_price_precision(pos_to_close.symbol))
+            # Closing a BUY position means SELLING at BID; Closing a SELL position means BUYING at ASK
+            close_price_to_use = (close_price_base - spread_amount / 2) if pos_to_close_obj.side == OrderSide.BUY else (close_price_base + spread_amount / 2)
+            close_price_to_use = round(close_price_to_use, self._get_price_precision(pos_to_close_obj.symbol))
 
-        # Volume check not implemented for partial close, assuming full close
-        self._close_position_at_price(pos_to_close, close_price_to_use, "CLOSED_BY_REQUEST")
-        return OrderResponse(order_id=order_id, status="CLOSED", symbol=pos_to_close.symbol, side=pos_to_close.side, type=OrderType.MARKET, volume=pos_to_close.volume, price=close_price_to_use, timestamp=self.current_simulated_time_unix, position_id=order_id)
+        volume_to_close_val = volume if volume is not None and volume > 0 else pos_to_close_obj.volume
+
+        realized_pnl, closed_fill_details = self._close_position_at_price(pos_to_close_obj, close_price_to_use, "CLOSED_BY_REQUEST", volume_to_close_val)
+
+        if closed_fill_details is None: # Close action failed in _close_position_at_price
+            return OrderResponse(status="REJECTED", error_message="Failed to execute close action (e.g. already closed, zero volume).", symbol=pos_to_close_obj.symbol, order_type=OrderType.MARKET, side=pos_to_close_obj.side, requested_volume=volume_to_close_val, filled_volume=0, **base_response_args) # type: ignore
+
+        final_status = "CLOSED"
+        if order_id in self.open_positions: # Check if position still exists (i.e., was partially closed)
+            if self.open_positions[order_id]['volume'] < pos_to_close_obj.volume:
+                 final_status = "PARTIALLY_CLOSED" # This might be complex if original order_id is for the whole pos
+
+        return OrderResponse(
+            order_id=order_id, # Original position_id acts as the reference
+            client_order_id=None, # Closures don't typically have new client_order_ids
+            status=final_status,
+            symbol=pos_to_close_obj.symbol,
+            order_type=OrderType.MARKET, # Closure is effectively a market order
+            side=OrderSide.SELL if pos_to_close_obj.side == OrderSide.BUY else OrderSide.BUY, # Opposite side for closure
+            requested_volume=volume_to_close_val, # Volume requested to close
+            filled_volume=closed_fill_details.fill_volume,
+            average_fill_price=closed_fill_details.fill_price,
+            requested_price=price, # If a specific price was requested for closing (e.g. limit close, not fully impl here)
+            stop_loss_price=None, # Not relevant for a close order response
+            take_profit_price=None, # Not relevant for a close order response
+            time_in_force=TimeInForce.IOC, # Closures are typically IOC
+            fill_policy=FillPolicy.IOC,    # Closures are typically IOC
+            creation_timestamp=ts, # Timestamp of this close action
+            last_update_timestamp=ts,
+            fills=[closed_fill_details],
+            error_message=None,
+            broker_native_response={"simulated_broker_comment": f"Position {order_id} closed by request."},
+            position_id=order_id # Refers to the (partially) closed position
+        )
 
     def get_open_positions(self, symbol: Optional[str] = None) -> List[Position]:
         self._update_equity_and_margin()

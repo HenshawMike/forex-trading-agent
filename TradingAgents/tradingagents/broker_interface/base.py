@@ -3,8 +3,8 @@ from typing import List, Dict, Optional, Any
 
 # Forward declare or import specific TypedDicts if they are used as return types here.
 # For now, using Any or more generic types for simplicity in this placeholder.
-# from tradingagents.forex_utils.forex_states import PriceTick, Candlestick, AccountInfo, OrderResponse, Position
-# from tradingagents.forex_utils.forex_states import OrderType, OrderSide, TimeInForce # If Enums are used in method signatures
+# from tradingagents.forex_utils.forex_states import PriceTick, Candlestick, AccountInfo, Position
+from tradingagents.forex_utils.forex_states import OrderType, OrderSide, TimeInForce, FillPolicy, OrderResponse # Updated imports
 
 class BrokerInterface(ABC):
     @abstractmethod
@@ -27,10 +27,11 @@ class BrokerInterface(ABC):
     def get_account_info(self) -> Optional[Dict]: # Placeholder Dict, ideally AccountInfo
         pass
     @abstractmethod
-    def place_order(self, symbol: str, order_type: Any, side: Any, volume: float, # Using Any for Enums
+    def place_order(self, symbol: str, order_type: OrderType, side: OrderSide, volume: float,
                       price: Optional[float] = None, stop_loss: Optional[float] = None,
-                      take_profit: Optional[float] = None, time_in_force: Any = None,
-                      magic_number: Optional[int] = 0, comment: Optional[str] = "") -> Dict: # Placeholder Dict, ideally OrderResponse
+                      take_profit: Optional[float] = None, time_in_force: Optional[TimeInForce] = None,
+                      fill_policy: Optional[FillPolicy] = None, # Added fill_policy
+                      magic_number: Optional[int] = 0, comment: Optional[str] = "") -> OrderResponse: # Return type changed
         pass
     # Add other abstract methods as designed previously if needed by agents directly
     # For now, these are the most likely to be used by a sub-agent.

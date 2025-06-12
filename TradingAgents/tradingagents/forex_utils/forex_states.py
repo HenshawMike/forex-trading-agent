@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Optional, Dict
+from typing import TypedDict, List, Optional, Dict, Any
 from enum import Enum
 
 class ForexMarketContext(TypedDict):
@@ -80,3 +80,39 @@ class TimeInForce(Enum):
     FOK = "FOK"  # Fill or Kill
     DAY = "DAY"  # Good for the day (session)
     # GTD = "GTD" # Good 'Til Date/Time (if needed)
+
+class FillPolicy(Enum):
+    FOK = "FOK"  # Fill Or Kill
+    IOC = "IOC"  # Immediate Or Cancel
+    RETURN = "RETURN" # For brokers that support returning unfilled portions
+    NORMAL = "NORMAL" # Generic, allows default broker behavior
+
+class FillDetails(TypedDict):
+    fill_id: Optional[str]
+    fill_price: float
+    fill_volume: float
+    fill_timestamp: float  # Unix timestamp
+    commission: Optional[float]
+    fee: Optional[float]
+
+class OrderResponse(TypedDict):
+    order_id: str
+    client_order_id: Optional[str]
+    status: str  # e.g., "PENDING", "FILLED", "PARTIALLY_FILLED", "REJECTED", "CANCELLED", "EXPIRED", "ERROR"
+    symbol: str
+    order_type: OrderType
+    side: OrderSide
+    requested_volume: float
+    filled_volume: float
+    average_fill_price: Optional[float]
+    requested_price: Optional[float]
+    stop_loss_price: Optional[float]
+    take_profit_price: Optional[float]
+    time_in_force: TimeInForce
+    fill_policy: Optional[FillPolicy]
+    creation_timestamp: float  # Unix timestamp
+    last_update_timestamp: Optional[float]
+    fills: List[FillDetails]
+    error_message: Optional[str]
+    broker_native_response: Optional[Any]
+    position_id: Optional[str]
