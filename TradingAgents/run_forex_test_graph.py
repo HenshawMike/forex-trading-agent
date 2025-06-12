@@ -61,6 +61,10 @@ def run_simulation_loop(
         print(f"\n--- Bar {i+1} | Time: {bar_iso_timestamp} | {currency_pair_to_trade} C: {current_bar_candlestick['close']} H: {current_bar_candlestick['high']} L: {current_bar_candlestick['low']} O: {current_bar_candlestick['open']} ---")
 
         broker_instance.update_current_time(bar_timestamp_unix)
+        # Pass all symbols relevant for this bar if broker needs to update multiple data points for _get_exchange_rate
+        # Assuming bar_dict for run_simulation_loop is a single symbol's bar for now.
+        # For multi-symbol needs in _get_exchange_rate, update_market_data should receive all.
+        # The test scenarios will need to call update_market_data with all relevant pairs.
         broker_instance.update_market_data({currency_pair_to_trade: current_bar_candlestick})
 
         broker_instance.process_pending_orders()
@@ -239,132 +243,110 @@ def test_scenario_pending_buy_limit():
 
 def test_scenario_margin_call():
     print("\n\n===== SCENARIO 4: MARGIN CALL LIQUIDATION =====")
-
-    # 1. Setup Broker with conditions prone to margin call
-    initial_cap = 200.0 # Low capital
-    leverage_sim = 100 # Decent leverage
-    stop_out_lvl_pct = 50.0 # Stop out at 50% margin level
-
-    broker = setup_scenario_broker(
-        initial_capital=initial_cap,
-        leverage=leverage_sim,
-        default_spread_pips={"EURUSD": 1.0}, # 1 pip spread
-        commission_per_lot={"EURUSD": 0.0}, # No commission
-        stop_out_level=stop_out_lvl_pct
-    )
-
-    # 2. Prepare Market Data Sequence for EURUSD
-    # Price will move sharply against an initial position.
+    initial_cap = 200.0; leverage_sim = 100; stop_out_lvl_pct = 50.0
+    broker = setup_scenario_broker(initial_capital=initial_cap, leverage=leverage_sim, default_spread_pips={"EURUSD": 1.0}, commission_per_lot={"EURUSD": 0.0}, stop_out_level=stop_out_lvl_pct)
     start_time_unix = int(datetime.datetime(2023, 10, 4, 10, 0, 0, tzinfo=datetime.timezone.utc).timestamp())
     eurusd_market_data: List[Dict[str, Any]] = []
-
-    # Bar 0: For placing the initial order
     entry_bar_price = 1.08000
-    eurusd_market_data.append({ # This is bar_data[0]
-        "timestamp": float(start_time_unix), "open": entry_bar_price, "high": entry_bar_price + 0.00050,
-        "low": entry_bar_price - 0.00050, "close": entry_bar_price, "volume": float(1000)
-    })
-
-    # Bar 1: Price moves sharply against a BUY position (drops significantly)
-    # Drop of 100 pips = 0.01000
-    adverse_move_bar_ts = start_time_unix + 3600 # H1
-    price_after_drop = entry_bar_price - 0.01000 # 1.07000
-    eurusd_market_data.append({ # This is bar_data[1]
-        "timestamp": float(adverse_move_bar_ts), "open": entry_bar_price, "high": entry_bar_price,
-        "low": price_after_drop, "close": price_after_drop, "volume": float(1500)
-    })
-
-    # Bar 2: Price stays low or moves a bit further
-    further_move_bar_ts = start_time_unix + (2 * 3600)
-    price_further_drop = price_after_drop - 0.00050 # 1.06950
-    eurusd_market_data.append({ # This is bar_data[2]
-        "timestamp": float(further_move_bar_ts), "open": price_after_drop, "high": price_after_drop,
-        "low": price_further_drop, "close": price_further_drop, "volume": float(1200)
-    })
-
+    eurusd_market_data.append({"timestamp": float(start_time_unix), "open": entry_bar_price, "high": entry_bar_price + 0.00050, "low": entry_bar_price - 0.00050, "close": entry_bar_price, "volume": float(1000)})
+    adverse_move_bar_ts = start_time_unix + 3600; price_after_drop = entry_bar_price - 0.01000
+    eurusd_market_data.append({"timestamp": float(adverse_move_bar_ts), "open": entry_bar_price, "high": entry_bar_price, "low": price_after_drop, "close": price_after_drop, "volume": float(1500)})
+    further_move_bar_ts = start_time_unix + (2 * 3600); price_further_drop = price_after_drop - 0.00050
+    eurusd_market_data.append({"timestamp": float(further_move_bar_ts), "open": price_after_drop, "high": price_after_drop, "low": price_further_drop, "close": price_further_drop, "volume": float(1200)})
     broker.load_test_data("EURUSD", eurusd_market_data)
-
-    # 3. Manually Place a BUY Order that will become problematic
     broker.update_current_time(eurusd_market_data[0]['timestamp'])
-    broker.update_market_data({
-        "timestamp": datetime.datetime.fromtimestamp(eurusd_market_data[0]['timestamp'], tz=datetime.timezone.utc),
-        "bars": {"EURUSD": Candlestick(**eurusd_market_data[0])}
-    })
-
-    trade_volume = 0.03 # Larger volume relative to capital
-
+    broker.update_market_data({"timestamp": datetime.datetime.fromtimestamp(eurusd_market_data[0]['timestamp'], tz=datetime.timezone.utc), "bars": {"EURUSD": Candlestick(**eurusd_market_data[0])}})
+    trade_volume = 0.03
     print(f"Attempting to place BUY order for {trade_volume} lots at simulated time: {datetime.datetime.fromtimestamp(eurusd_market_data[0]['timestamp'], tz=datetime.timezone.utc).isoformat()}")
-    buy_order_response = broker.place_order(
-        symbol="EURUSD", order_type=OrderType.MARKET, side=OrderSide.BUY,
-        volume=trade_volume, stop_loss=None, take_profit=None,
-        comment="Test Margin Call Scenario - Manual BUY"
-    )
-
+    buy_order_response = broker.place_order(symbol="EURUSD", order_type=OrderType.MARKET, side=OrderSide.BUY, volume=trade_volume, stop_loss=None, take_profit=None, comment="Test Margin Call Scenario - Manual BUY")
     position_id_to_track = None
-    if not (buy_order_response and buy_order_response.get("status") == "FILLED"):
-        print(f"ERROR: Manual BUY Order for margin call test failed to fill: {buy_order_response}")
-        return
-    print(f"Manual BUY Order Filled: {buy_order_response}")
-    position_id_to_track = buy_order_response.get("position_id") # Get from response directly
-    if not position_id_to_track:
-        print("ERROR: Could not retrieve position_id for margin call test from order response.")
-        return
-
-    # 4. Initialize Graph
+    if not (buy_order_response and buy_order_response.get("status") == "FILLED"): print(f"ERROR: Manual BUY Order for margin call test failed to fill: {buy_order_response}"); return
+    print(f"Manual BUY Order Filled: {buy_order_response}"); position_id_to_track = buy_order_response.get("position_id")
+    if not position_id_to_track: print("ERROR: Could not retrieve position_id for margin call test from order response."); return
     graph = ForexTradingGraph(broker=broker)
-
-    # 5. Execute Simulation Loop
     print(f"Account Info before adverse move (after order placement): {broker.get_account_info()}")
-
-    run_simulation_loop(
-        graph_instance=graph,
-        broker_instance=broker,
-        currency_pair_to_trade="EURUSD",
-        market_data_sequence=eurusd_market_data[1:] # Start from the bar with the price drop
-    )
-
+    run_simulation_loop(graph_instance=graph, broker_instance=broker, currency_pair_to_trade="EURUSD", market_data_sequence=eurusd_market_data[1:])
     print("===== VERIFICATION FOR SCENARIO 4 (MARGIN CALL) =====")
     final_account_info = broker.get_account_info()
     print(f"Final Account Info: {final_account_info}")
-
-    found_margin_call_trigger = False
-    found_liquidation_closure = False
-    liquidated_pos_id_in_history = None
-
-    for event in broker.trade_history: # Use attribute directly
+    found_margin_call_trigger = False; found_liquidation_closure = False; liquidated_pos_id_in_history = None
+    for event in broker.trade_history:
         print(f"History Event: {event}")
-        if event.get("event_type") == "MARGIN_CALL_STOP_OUT_TRIGGERED":
-            found_margin_call_trigger = True
-        if event.get("event_type") == "POSITION_CLOSED" and event.get("reason_for_close") == "MARGIN_CALL_LIQUIDATION":
-            found_liquidation_closure = True
-            liquidated_pos_id_in_history = event.get("position_id")
-
-    if found_margin_call_trigger:
-        print("VERIFICATION: MARGIN_CALL_STOP_OUT_TRIGGERED event found.")
-    else:
-        print("VERIFICATION ERROR: MARGIN_CALL_STOP_OUT_TRIGGERED event NOT found.")
-
+        if event.get("event_type") == "MARGIN_CALL_STOP_OUT_TRIGGERED": found_margin_call_trigger = True
+        if event.get("event_type") == "POSITION_CLOSED" and event.get("reason_for_close") == "MARGIN_CALL_LIQUIDATION": found_liquidation_closure = True; liquidated_pos_id_in_history = event.get("position_id")
+    if found_margin_call_trigger: print("VERIFICATION: MARGIN_CALL_STOP_OUT_TRIGGERED event found.")
+    else: print("VERIFICATION ERROR: MARGIN_CALL_STOP_OUT_TRIGGERED event NOT found.")
     if found_liquidation_closure:
         print(f"VERIFICATION: POSITION_CLOSED due to MARGIN_CALL_LIQUIDATION (Pos ID: {liquidated_pos_id_in_history}) event found.")
-        if liquidated_pos_id_in_history == position_id_to_track:
-            print("VERIFICATION: Correct position was liquidated.")
-        else:
-            print(f"VERIFICATION WARNING: A position was liquidated ({liquidated_pos_id_in_history}), but ID doesn't match tracked test position ID ({position_id_to_track}).")
-    else:
-        print("VERIFICATION ERROR: No POSITION_CLOSED due to MARGIN_CALL_LIQUIDATION event found.")
-
+        if liquidated_pos_id_in_history == position_id_to_track: print("VERIFICATION: Correct position was liquidated.")
+        else: print(f"VERIFICATION WARNING: A position was liquidated ({liquidated_pos_id_in_history}), but ID doesn't match tracked test position ID ({position_id_to_track}).")
+    else: print("VERIFICATION ERROR: No POSITION_CLOSED due to MARGIN_CALL_LIQUIDATION event found.")
     open_positions_final = broker.get_open_positions()
-    if not any(p['position_id'] == position_id_to_track for p in open_positions_final):
-        print(f"VERIFICATION: Tracked position {position_id_to_track} is confirmed closed.")
-    else:
-        print(f"VERIFICATION ERROR: Tracked position {position_id_to_track} is still listed as open.")
+    if not any(p['position_id'] == position_id_to_track for p in open_positions_final): print(f"VERIFICATION: Tracked position {position_id_to_track} is confirmed closed.")
+    else: print(f"VERIFICATION ERROR: Tracked position {position_id_to_track} is still listed as open.")
+    if final_account_info and (final_account_info['margin_level'] == float('inf') or final_account_info['margin_level'] > stop_out_lvl_pct) : print(f"VERIFICATION: Final margin level ({final_account_info['margin_level']}) is healthy or no positions open.")
+    elif final_account_info: print(f"VERIFICATION WARNING: Final margin level ({final_account_info['margin_level']}) is still critical (Stop Out: {stop_out_lvl_pct}). Liquidation might have been incomplete or equity very low.")
+    else: print("VERIFICATION ERROR: Could not retrieve final account info for margin level check.")
+    print("==================================================")
 
-    if final_account_info and (final_account_info['margin_level'] == float('inf') or final_account_info['margin_level'] > stop_out_lvl_pct) :
-         print(f"VERIFICATION: Final margin level ({final_account_info['margin_level']}) is healthy or no positions open.")
-    elif final_account_info:
-         print(f"VERIFICATION WARNING: Final margin level ({final_account_info['margin_level']}) is still critical (Stop Out: {stop_out_lvl_pct}). Liquidation might have been incomplete or equity very low.")
-    else:
-        print("VERIFICATION ERROR: Could not retrieve final account info for margin level check.")
+def test_scenario_cross_currency_pnl():
+    print("\n\n===== SCENARIO 5: CROSS-CURRENCY P&L (AUDJPY BUY in USD account) =====")
+    broker = setup_scenario_broker(initial_capital=10000.0, default_spread_pips={"AUDJPY": 1.5, "AUDUSD": 0.8, "USDJPY": 0.7, "default": 1.0}, commission_per_lot={"default": 0.0})
+    broker.account_currency = "USD"
+    bar0_ts = int(datetime.datetime(2023, 10, 5, 10, 0, 0, tzinfo=datetime.timezone.utc).timestamp()); bar1_ts = bar0_ts + 3600
+    audjpy_data = [{"timestamp": float(bar0_ts), "open": 98.00, "high": 98.10, "low": 97.90, "close": 98.05, "volume": 1000.0}, {"timestamp": float(bar1_ts), "open": 98.05, "high": 98.60, "low": 98.00, "close": 98.55, "volume": 1200.0}]
+    audusd_data = [{"timestamp": float(bar0_ts), "open": 0.66000, "high": 0.66050, "low": 0.65950, "close": 0.66010, "volume": 1000.0}, {"timestamp": float(bar1_ts), "open": 0.66010, "high": 0.66250, "low": 0.66000, "close": 0.66220, "volume": 1200.0}]
+    usdjpy_data = [{"timestamp": float(bar0_ts), "open": 148.00, "high": 148.10, "low": 147.90, "close": 148.05, "volume": 1000.0}, {"timestamp": float(bar1_ts), "open": 148.05, "high": 148.90, "low": 148.00, "close": 148.85, "volume": 1200.0}]
+    broker.load_test_data("AUDJPY", audjpy_data); broker.load_test_data("AUDUSD", audusd_data); broker.load_test_data("USDJPY", usdjpy_data)
+    broker.update_current_time(bar0_ts)
+    broker.update_market_data({"timestamp": datetime.datetime.fromtimestamp(bar0_ts, tz=datetime.timezone.utc), "bars": {"AUDJPY": audjpy_data[0], "AUDUSD": audusd_data[0], "USDJPY": usdjpy_data[0]}})
+    trade_volume = 0.01
+    print(f"Attempting to place BUY order for {trade_volume} lots AUDJPY at simulated time of Bar 0...")
+    buy_order_response = broker.place_order(symbol="AUDJPY", order_type=OrderType.MARKET, side=OrderSide.BUY, volume=trade_volume, comment="Test Cross-Currency PNL - Manual BUY AUDJPY")
+    position_id_to_track = None; entry_price_actual = None
+    if not (buy_order_response and buy_order_response.get("status") == "FILLED"): print(f"ERROR: Manual BUY Order for cross-currency test failed to fill: {buy_order_response}"); return
+    print(f"Manual BUY Order Filled: {buy_order_response}"); entry_price_actual = buy_order_response['price']; position_id_to_track = buy_order_response.get("position_id")
+    if not position_id_to_track: print("ERROR: Could not retrieve position_id for cross-currency test from order response."); return
+    print(f"\nAdvancing market to Bar 1 time: {datetime.datetime.fromtimestamp(bar1_ts, tz=datetime.timezone.utc).isoformat()}")
+    broker.update_current_time(bar1_ts)
+    broker.update_market_data({"timestamp": datetime.datetime.fromtimestamp(bar1_ts, tz=datetime.timezone.utc), "bars": {"AUDJPY": audjpy_data[1], "AUDUSD": audusd_data[1], "USDJPY": usdjpy_data[1]}})
+    broker.check_for_sl_tp_triggers(); broker.process_pending_orders(); broker.check_for_margin_call()
+    print(f"Attempting to close position {position_id_to_track} at simulated time of Bar 1...")
+    close_order_response = broker.close_order(position_id_to_track, volume=trade_volume)
+    print(f"Close Order Response: {close_order_response}")
+    actual_close_price = None
+    if close_order_response and close_order_response['status'] == "CLOSED":
+        actual_close_price = close_order_response.get("price")
+        if actual_close_price is None:
+            for event in reversed(broker.get_trade_history()):
+                if event.get("event_type") == "POSITION_CLOSED" and event.get("position_id") == position_id_to_track: actual_close_price = event.get("close_price"); break
+        if actual_close_price is None: print("ERROR: Could not retrieve actual close price from history or response for verification."); return
+    else: print("ERROR: Position did not close as expected."); return
+    print("===== VERIFICATION FOR SCENARIO 5 (CROSS-CURRENCY P&L) =====")
+    final_account_info = broker.get_account_info(); print(f"Final Account Info: {final_account_info}")
+    audjpy_info = broker._get_symbol_info("AUDJPY")
+    if not audjpy_info or entry_price_actual is None or actual_close_price is None : print("ERROR: Missing critical info for PNL verification (symbol_info, entry_price, or close_price)."); return
+    contract_size_audjpy = audjpy_info['contract_size_units']; price_diff_audjpy = actual_close_price - entry_price_actual
+    expected_pnl_in_jpy = price_diff_audjpy * contract_size_audjpy * trade_volume
+    usdjpy_rate_at_close = None
+    if "USDJPY" in broker.current_market_data and broker.current_market_data["USDJPY"]: usdjpy_rate_at_close = broker.current_market_data["USDJPY"]['close']
+    expected_pnl_in_usd_manual: Any = "N/A"
+    if usdjpy_rate_at_close and usdjpy_rate_at_close != 0:
+        expected_pnl_in_usd_manual = expected_pnl_in_jpy / usdjpy_rate_at_close
+        print(f"Details for manual verification: Entry AUDJPY: {entry_price_actual}, Close AUDJPY: {actual_close_price}"); print(f"Price Diff (AUDJPY): {price_diff_audjpy:.{audjpy_info['price_precision']}f}"); print(f"P/L in JPY (direct calc): {expected_pnl_in_jpy:.2f}"); print(f"USDJPY rate at close: {usdjpy_rate_at_close}"); print(f"Expected P/L in USD (manual calc): {expected_pnl_in_usd_manual:.2f}")
+    else: print("ERROR: Could not get USDJPY rate for P/L conversion verification.")
+    actual_pnl_usd = final_account_info['balance'] - initial_cap; print(f"Actual P/L in USD (from balance change): {actual_pnl_usd:.2f}")
+    found_audjpy_buy_fill = False; found_audjpy_close = False; realized_pnl_from_history = None
+    for event in broker.trade_history:
+        if event.get("event_type") == "MARKET_ORDER_FILLED" and event.get("symbol") == "AUDJPY" and event.get("side") == OrderSide.BUY.value: found_audjpy_buy_fill = True
+        if event.get("event_type") == "POSITION_CLOSED" and event.get("symbol") == "AUDJPY" and event.get("position_id") == position_id_to_track : found_audjpy_close = True; realized_pnl_from_history = event.get("realized_pnl")
+    if found_audjpy_buy_fill and found_audjpy_close:
+        print(f"VERIFICATION: Cross-currency AUDJPY BUY trade filled and closed. Broker Realized P/L: {realized_pnl_from_history:.2f} USD")
+        if isinstance(expected_pnl_in_usd_manual, float) and realized_pnl_from_history is not None:
+            if abs(expected_pnl_in_usd_manual - realized_pnl_from_history) < 0.01: print("VERIFICATION SUCCESS: Broker P/L matches expected P/L.")
+            else: print(f"VERIFICATION WARNING: Broker P/L ({realized_pnl_from_history:.2f}) differs from expected ({expected_pnl_in_usd_manual:.2f}).")
+        else: print("VERIFICATION NOTE: Could not automatically compare expected P/L with broker P/L.")
+    else: print(f"VERIFICATION ERROR: Cross-currency P/L scenario not fully verified. BuyFill:{found_audjpy_buy_fill}, Closed:{found_audjpy_close}")
     print("==================================================")
 
 def main():
@@ -376,4 +358,4 @@ def main():
     test_scenario_margin_call() # Add this call
 
 if __name__ == "__main__":
-    main()
+>>>>>>> REPLACE
