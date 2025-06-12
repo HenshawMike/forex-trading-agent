@@ -254,12 +254,11 @@ def test_scenario_winning_buy_tp():
     if final_account_info:
         print(f"Final Balance: {final_account_info['balance']:.2f}")
 
-        # Expected P/L: 40 pips (since spread was 1 pip, entry was Ask, TP is hit exactly)
-        # Commission is 0 for this test.
-        # For EURUSD 0.01 lots, 1 pip = $0.10. So, 40 pips = $4.00 profit.
-        # (Entry price already includes half spread, TP is hit at that exact level)
-        expected_profit = 40 * 0.10
-        print(f"Expected Profit (0.01 lots, 0 commission, 1 pip spread, TP hit): ${expected_profit:.2f}")
+        day_trader_tp_pips_scenario1 = 40.0
+        pip_value_for_0_01_lots_eurusd = 0.10
+
+        expected_profit = day_trader_tp_pips_scenario1 * pip_value_for_0_01_lots_eurusd
+        print(f"Expected Profit (for {day_trader_tp_pips_scenario1} pip TP, 0.01 lots, 0 commission): ${expected_profit:.2f}")
         print(f"Actual Profit: ${final_account_info['balance'] - 10000.0:.2f}")
 
         found_buy_fill = False
@@ -387,11 +386,12 @@ def test_scenario_losing_sell_sl():
     final_account_info = broker.get_account_info()
     if final_account_info:
         print(f"Final Balance: {final_account_info['balance']:.2f}")
-        # Expected Loss: 20 pips SL. Spread is paid on entry.
-        # For EURUSD 0.01 lots, 1 pip = $0.10. So, 20 pips = $2.00 loss from SL.
-        # Commission is 0.
-        expected_loss = day_trader_sl_pips * 0.10
-        print(f"Expected Loss (0.01 lots, 0 commission, SL hit): ${expected_loss:.2f}")
+
+        day_trader_sl_pips_scenario2 = 20.0
+        pip_value_for_0_01_lots_eurusd = 0.10
+
+        expected_loss = day_trader_sl_pips_scenario2 * pip_value_for_0_01_lots_eurusd
+        print(f"Expected Loss (for {day_trader_sl_pips_scenario2} pip SL, 0.01 lots, 0 commission): ${expected_loss:.2f}")
         # Actual loss calculation from balance change:
         actual_loss_from_balance = 10000.0 - final_account_info['balance']
         print(f"Actual Loss reflected in balance: ${actual_loss_from_balance:.2f}")

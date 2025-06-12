@@ -37,7 +37,11 @@ class SimulatedBroker(BrokerInterface):
         self.account_currency = "USD"
         self.margin_call_warning_level_pct = 100.0 # e.g., 100%
         self.stop_out_level_pct = 50.0          # e.g., 50%
-        self.test_data_store: Dict[str, List[Dict]] = {} # Added for test data
+        self.test_data_store: Dict[str, List[Dict]] = {}
+
+        self.commission_per_lot: Dict[str, float] = {
+            "EURUSD": 7.0, "GBPUSD": 7.0, "USDJPY": 7.0, "AUDUSD": 7.0, "USDCAD": 7.0, "XAUUSD": 7.0, "default": 7.0
+        } # Assumed ROUND-TURN, in account currency per 1.0 lot
 
         print(f"SimulatedBroker initialized. Capital: {initial_capital}, Slippage: {self.fixed_slippage_pips} pips, Leverage: {self.leverage}:1, Account Currency: {self.account_currency}, Margin Warning: {self.margin_call_warning_level_pct}%, Stop Out: {self.stop_out_level_pct}%")
 
@@ -52,17 +56,73 @@ class SimulatedBroker(BrokerInterface):
 
     def _get_symbol_info(self, symbol: str) -> Optional[Dict[str, Any]]:
         symbol_upper = symbol.upper()
-        if len(symbol_upper) == 6 and symbol_upper.isalnum():
+
+        # Default contract size for Forex
+        contract_size_units = 100000.0
+
+        # Structure:
+        # "base_currency": str
+        # "quote_currency": str
+        # "price_precision": int (decimal places for price display)
+        # "point_size": float (smallest price increment, e.g., 0.00001 for EURUSD)
+        # "pip_definition": float (the value of 1 pip in terms of price, e.g., 0.0001 for EURUSD, 0.01 for USDJPY)
+        # "contract_size_units": float
+
+        info = None
+
+        if len(symbol_upper) == 6 and symbol_upper.isalnum(): # Standard XXXYYY Forex pair
             base = symbol_upper[:3]
             quote = symbol_upper[3:]
+
             if "JPY" == quote:
-                return {"base_currency": base, "quote_currency": quote, "price_precision": 3, "point_size": 0.001, "pip_unit_value": 0.01}
-            else:
-                return {"base_currency": base, "quote_currency": quote, "price_precision": 5, "point_size": 0.00001, "pip_unit_value": 0.0001}
+                info = {
+                    "base_currency": base, "quote_currency": quote,
+                    "price_precision": 3,
+                    "point_size": 0.001,
+                    "pip_definition": 0.01, # 1 pip is the 2nd decimal place for JPY pairs
+                    "contract_size_units": contract_size_units
+                }
+            else: # Most other Forex pairs (e.g., EURUSD, GBPUSD, AUDUSD)
+                info = {
+                    "base_currency": base, "quote_currency": quote,
+                    "price_precision": 5,
+                    "point_size": 0.00001,
+                    "pip_definition": 0.0001, # 1 pip is the 4th decimal place
+                    "contract_size_units": contract_size_units
+                }
+
         elif symbol_upper in ["XAUUSD", "GOLD"]:
-            return {"base_currency": "XAU", "quote_currency": "USD", "price_precision": 2, "point_size": 0.01, "pip_unit_value": 0.1}
-        print(f"SimBroker._get_symbol_info: Symbol info not configured for {symbol}")
-        return None
+            info = {
+                "base_currency": "XAU", "quote_currency": "USD",
+                "price_precision": 2,
+                "point_size": 0.01,
+                "pip_definition": 0.1, # For XAUUSD, 1 pip is often defined as $0.10 change if price is e.g. 1800.XX
+                                      # Sometimes it's $1.0. This needs to be consistent with broker.
+                                      # If price is 1800.12, pip_definition of 0.1 means the first decimal.
+                                      # Let's assume for XAUUSD, a "pip" might refer to the first decimal place for simplicity.
+                                      # Or, often for XAUUSD, "ticks" or "points" (0.01) are used instead of pips.
+                                      # If we define a "pip" as 10 points for XAUUSD, then pip_definition = 0.1
+                "contract_size_units": 100.0 # Contract size for XAUUSD is often 100 ounces
+            }
+        # Add elif for other specific symbols like XAGUSD, indices, oil if needed
+
+        if info:
+            return info
+        else:
+            print(f"SimBroker._get_symbol_info: Symbol info not explicitly configured for '{symbol_upper}'. Attempting generic parsing or default.")
+            # Attempt generic parsing for unlisted XXXYYY (less accurate for pip_definition)
+            if len(symbol_upper) == 6 and symbol_upper.isalnum():
+                base = symbol_upper[:3]
+                quote = symbol_upper[3:]
+                # Generic default for non-JPY (assuming 5 decimal places)
+                return {
+                    "base_currency": base, "quote_currency": quote,
+                    "price_precision": 5, "point_size": 0.00001, "pip_definition": 0.0001,
+                    "contract_size_units": contract_size_units
+                }
+
+            print(f"SimBroker._get_symbol_info: Could not determine info for '{symbol_upper}'. Returning None.")
+            return None
 
     def _get_point_size(self, symbol: str) -> float:
         info = self._get_symbol_info(symbol)
@@ -74,63 +134,147 @@ class SimulatedBroker(BrokerInterface):
 
     def _get_pip_value_for_sl_tp(self, symbol: str) -> float: # This is the price change for 1 pip
         info = self._get_symbol_info(symbol)
-        return info["pip_unit_value"] if info else 0.0001
+        # Ensure this returns the actual price change for 1 pip, which is 'pip_definition'
+        return info["pip_definition"] if info and "pip_definition" in info else (0.01 if "JPY" in symbol.upper() else 0.0001) # Fallback
 
     def _get_exchange_rate(self, from_currency: str, to_currency: str) -> Optional[float]:
-        if from_currency == to_currency: return 1.0
-        direct_pair = f"{from_currency}{to_currency}".upper()
-        inverse_pair = f"{to_currency}{from_currency}".upper()
+        # Ensure currency codes are uppercase for consistent dictionary lookups
+        from_curr = from_currency.upper()
+        to_curr = to_currency.upper()
 
-        current_market_direct = self.current_market_data.get(direct_pair)
-        if current_market_direct: return current_market_direct['close']
+        if from_curr == to_curr:
+            return 1.0
 
-        current_market_inverse = self.current_market_data.get(inverse_pair)
-        if current_market_inverse and current_market_inverse['close'] != 0:
-            return 1.0 / current_market_inverse['close']
+        # Check if current_market_data is available
+        if not self.current_market_data:
+            print(f"SimBroker._get_exchange_rate: current_market_data is not populated. Cannot determine rate for {from_curr}/{to_curr}.")
+            return None
 
-        # Simplified USD cross for non-USD account currency (more complex logic needed for full support)
-        if self.account_currency != "USD": # Only attempt USD cross if account is not USD
-             # Try from_currency -> USD -> to_currency
-            from_usd_rate = self._get_exchange_rate(from_currency, "USD")
-            usd_to_rate = self._get_exchange_rate("USD", to_currency)
-            if from_usd_rate and usd_to_rate:
-                return from_usd_rate * usd_to_rate
+        # Helper to safely get a close price for a symbol
+        def get_pair_close_price(symbol: str) -> Optional[float]:
+            symbol_upper = symbol.upper()
+            if symbol_upper in self.current_market_data and self.current_market_data[symbol_upper]:
+                # Ensure 'close' key exists and value is not None
+                close_price = self.current_market_data[symbol_upper].get('close')
+                if close_price is not None:
+                    return float(close_price) # Ensure it's a float
+            return None
 
-        print(f"SimBroker._get_exchange_rate: Exchange rate for {from_currency}/{to_currency} not found. Current time: {self.current_simulated_time_unix}")
+        # 1. Try Direct Pair (e.g., EURUSD for EUR to USD)
+        direct_pair_symbol = f"{from_curr}{to_curr}"
+        rate = get_pair_close_price(direct_pair_symbol)
+        if rate is not None:
+            # print(f"SimBroker._get_exchange_rate: Found direct rate for {direct_pair_symbol}: {rate}")
+            return rate
+
+        # 2. Try Inverse Pair (e.g., USDJPY for JPY to USD, need 1/rate)
+        inverse_pair_symbol = f"{to_curr}{from_curr}"
+        inverse_rate = get_pair_close_price(inverse_pair_symbol)
+        if inverse_rate is not None and inverse_rate != 0:
+            # print(f"SimBroker._get_exchange_rate: Found inverse rate for {inverse_pair_symbol}: {inverse_rate}, using 1/{inverse_rate}")
+            return 1.0 / inverse_rate
+        elif inverse_rate == 0:
+             print(f"SimBroker._get_exchange_rate: Inverse rate for {inverse_pair_symbol} is zero, cannot divide.")
+
+
+        # 3. Try Triangulation through USD (or other common intermediary if account_currency is not USD)
+        # For simplicity, this example primarily focuses on USD as the intermediary.
+        # A more generic solution would use self.account_currency as the intermediary if not USD.
+        intermediary_currency = "USD"
+
+        if from_curr != intermediary_currency and to_curr != intermediary_currency:
+            # Case 1: from_curr / to_curr  = (from_curr / USD) / (to_curr / USD)
+            # Requires: from_curr/USD and to_curr/USD
+            # print(f"SimBroker._get_exchange_rate: Attempting {from_curr}/{to_curr} via USD: ({from_curr}/USD) / ({to_curr}/USD)")
+            from_curr_to_usd_rate = self._get_exchange_rate(from_curr, intermediary_currency) # Recursive call
+            to_curr_to_usd_rate = self._get_exchange_rate(to_curr, intermediary_currency) # Recursive call
+
+            if from_curr_to_usd_rate is not None and to_curr_to_usd_rate is not None and to_curr_to_usd_rate != 0:
+                calculated_rate = from_curr_to_usd_rate / to_curr_to_usd_rate
+                # print(f"SimBroker._get_exchange_rate: Calculated {from_curr}/{to_curr} as {from_curr_to_usd_rate} / {to_curr_to_usd_rate} = {calculated_rate}")
+                return calculated_rate
+
+        # Log failure if no path found after all attempts
+        print(f"SimBroker._get_exchange_rate: Exchange rate for {from_curr}/{to_curr} could not be determined "
+              f"at simulated time {datetime.datetime.fromtimestamp(self.current_simulated_time_unix, tz=datetime.timezone.utc).isoformat()}. "
+              f" Ensure necessary pairs (e.g., involving USD) are in market data if direct pair is missing.")
         return None
 
     def calculate_pip_value_in_account_currency(self, symbol: str, volume_lots: float) -> Optional[float]:
         symbol_info = self._get_symbol_info(symbol)
-        if not symbol_info: return None
-        pip_unit_val = symbol_info['pip_unit_value']
+        if not symbol_info:
+            print(f"SimBroker.calculate_pip_value: Could not get symbol info for {symbol}.")
+            return None
+
+        pip_definition_in_price_terms = symbol_info['pip_definition'] # e.g., 0.0001 for EURUSD, 0.01 for USDJPY
         quote_currency = symbol_info['quote_currency']
-        contract_size = 100000
-        value_of_one_pip_in_quote_currency = pip_unit_val * contract_size * volume_lots
+        contract_size = symbol_info['contract_size_units'] # e.g., 100000 for FX, 100 for XAUUSD
+
+        # Value of one pip for the given volume, in the QUOTE currency of the pair
+        value_of_one_pip_in_quote_currency = pip_definition_in_price_terms * contract_size * volume_lots
+
         if quote_currency == self.account_currency:
             return value_of_one_pip_in_quote_currency
-        exchange_rate = self._get_exchange_rate(quote_currency, self.account_currency)
-        if exchange_rate is None:
-            print(f"SimBroker.calculate_pip_value: Failed to get exchange rate for {quote_currency} to {self.account_currency} for symbol {symbol}")
-            return None
-        return value_of_one_pip_in_quote_currency * exchange_rate
+        else:
+            # Need to convert from quote_currency to self.account_currency
+            # Example: symbol=EURJPY (quote JPY), account_currency=USD. Need JPY/USD rate.
+            # _get_exchange_rate("JPY", "USD")
+            exchange_rate = self._get_exchange_rate(quote_currency, self.account_currency)
 
-    def calculate_pnl_in_account_currency(self, symbol: str, side: OrderSide, volume_lots: float, entry_price: float, close_price: float) -> Optional[float]:
+            if exchange_rate is None:
+                print(f"SimBroker.calculate_pip_value: Failed to get exchange rate for {quote_currency} to {self.account_currency} for symbol {symbol} to calculate pip value.")
+                return None
+
+            return value_of_one_pip_in_quote_currency * exchange_rate
+
+    def calculate_pnl_in_account_currency(self,
+                                      symbol: str,
+                                      side: OrderSide,
+                                      volume_lots: float,
+                                      entry_price: float,
+                                      close_price: float) -> Optional[float]:
         symbol_info = self._get_symbol_info(symbol)
-        if not symbol_info: return None
+        if not symbol_info:
+            print(f"SimBroker.calculate_pnl: Could not get symbol info for {symbol}.")
+            return None
+
+        # pip_definition is the price movement that constitutes 1 pip (e.g., 0.0001 for EURUSD)
+        pip_definition_val = symbol_info['pip_definition']
+        if pip_definition_val == 0: # Avoid division by zero
+            print(f"SimBroker.calculate_pnl: Pip definition for {symbol} is zero. Cannot calculate P/L in pips.")
+            return None
+
         price_difference = (close_price - entry_price) if side == OrderSide.BUY else (entry_price - close_price)
-        if symbol_info['pip_unit_value'] == 0: return None
-        pips_moved = price_difference / symbol_info['pip_unit_value']
-        value_of_one_pip_for_one_lot = self.calculate_pip_value_in_account_currency(symbol, 1.0)
-        if value_of_one_pip_for_one_lot is None: return None
-        return pips_moved * value_of_one_pip_for_one_lot * volume_lots
+
+        # Calculate how many pips were moved
+        pips_moved = price_difference / pip_definition_val
+
+        # Get the value of 1 pip for 1 standard lot in account currency
+        value_of_one_pip_for_one_lot_in_acct_curr = self.calculate_pip_value_in_account_currency(symbol, 1.0)
+
+        if value_of_one_pip_for_one_lot_in_acct_curr is None:
+            print(f"SimBroker.calculate_pnl: Could not calculate pip value in account currency for {symbol}.")
+            return None
+
+        # Total P/L = pips_moved * (value of 1 pip for 1 lot) * (actual lots traded)
+        total_pnl = pips_moved * value_of_one_pip_for_one_lot_in_acct_curr * volume_lots
+
+        return total_pnl
 
     def _get_spread_in_price_terms(self, symbol: str) -> float:
-        pips = self.default_spread_pips.get(symbol.upper(), 1.0)
-        pip_price_unit = self._get_pip_value_for_sl_tp(symbol)
-        return pips * pip_price_unit
+        symbol_info = self._get_symbol_info(symbol.upper()) # Already uppercased symbol
+        if not symbol_info:
+            print(f"SimBroker._get_spread_in_price_terms: Could not get symbol info for {symbol}, returning 0 spread.")
+            return 0.0
+
+        configured_pips = self.default_spread_pips.get(symbol.upper(), self.default_spread_pips.get("default", 1.0))
+        pip_definition_for_symbol = symbol_info['pip_definition'] # e.g. 0.0001 for EURUSD
+
+        return configured_pips * pip_definition_for_symbol
 
     def _calculate_commission(self, symbol: str, volume_lots: float) -> float:
-        return self.commission_per_lot.get(symbol.upper(), 0.0) * volume_lots
+        return self.commission_per_lot.get(symbol.upper(), self.commission_per_lot.get("default", 7.0)) * volume_lots
+
 
     def _calculate_margin_required(self, symbol: str, volume_lots: float, entry_price: float) -> float:
         contract_size = 100000
@@ -366,12 +510,33 @@ class SimulatedBroker(BrokerInterface):
                 if order_side == OrderSide.BUY and bar['high'] >= order_price: fill_price_sim = max(order_price, bar['open'])
                 elif order_side == OrderSide.SELL and bar['low'] <= order_price: fill_price_sim = min(order_price, bar['open'])
             if fill_price_sim is not None:
-                fill_price_sim = round(fill_price_sim, precision); print(f"SimBroker: Pending order {order_id} TRIGGERED @ {fill_price_sim}.")
-                ts_unix = self.current_simulated_time_unix; actual_fill = fill_price_sim
-                slip_amt = self.fixed_slippage_pips * self._get_point_size(symbol)
-                if order_type == OrderType.STOP: actual_fill += random.uniform(0, slip_amt) if order_side == OrderSide.BUY else -random.uniform(0, slip_amt)
-                actual_fill = round(actual_fill, precision)
-                margin_req = self._calculate_margin_required(symbol, order_volume, actual_fill)
+                # fill_price_simulated is the price level where the order condition was met (e.g. limit price, or bar.open for stops)
+                effective_exec_base = round(fill_price_simulated, precision)
+
+                spread_for_fill = self._get_spread_in_price_terms(symbol)
+                actual_fill_price: float
+
+                if order_side == OrderSide.BUY: # Buy Limit or Buy Stop
+                    actual_fill_price = effective_exec_base + (spread_for_fill / 2) # Initial Ask from effective_exec_base
+                    if order_type == OrderType.STOP: # Stops slip from this Ask
+                        actual_fill_price += random.uniform(0, self.fixed_slippage_pips * self._get_point_size(symbol))
+                    # For BUY LIMIT orders, they fill at the limit price or better.
+                    # If effective_exec_base was the limit price, the fill (ASK) must be <= limit price.
+                    # Our current actual_fill_price = limit_price + spread/2. This needs adjustment if limit_price is the final fill price.
+                    # For simplicity, we are assuming the 'effective_exec_base' is the 'mid' and then spread is applied.
+                    # A more realistic limit order fill: fill if market_ask <= order_price, fill_price = order_price.
+                    # Here, we are saying if market (using bar.low for BUY LIMIT) touches order_price, it becomes a market order at that level (then spread/slip).
+
+                else: # SELL (OrderSide.SELL) - Sell Limit or Sell Stop
+                    actual_fill_price = effective_exec_base - (spread_for_fill / 2) # Initial Bid
+                    if order_type == OrderType.STOP: # Stops slip from this Bid
+                        actual_fill_price -= random.uniform(0, self.fixed_slippage_pips * self._get_point_size(symbol))
+
+                actual_fill_price = round(actual_fill_price, precision)
+                print(f"SimBroker: Pending order {order_id} ({symbol} {order_side.value} {order_type.value} @ {order_price}) TRIGGERED. Effective base: {effective_exec_base}, Spread: {spread_for_fill:.{precision}f}. Final Fill: {actual_fill_price}")
+
+                ts_unix = self.current_simulated_time_unix
+                margin_req = self._calculate_margin_required(symbol, order_volume, actual_fill_price)
                 self._update_equity_and_margin() # Ensure fresh equity/margin for check
                 free_margin = self.equity - self.margin_used
                 if free_margin < margin_req:
@@ -387,6 +552,9 @@ class SimulatedBroker(BrokerInterface):
                 orders_to_remove_after_processing.append(order_id)
         for oid in orders_to_remove_after_processing:
             if oid in self.pending_orders: del self.pending_orders[oid]
+
+    # Note: _update_equity_and_margin() is called by update_market_data, place_order,
+    # _close_position_at_price, and potentially before critical checks in process_pending_orders.
 
     def _update_equity_and_margin(self):
         current_total_unrealized_pnl = 0.0
