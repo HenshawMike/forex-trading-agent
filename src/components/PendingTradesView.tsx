@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import {
     Box,
     Typography,
@@ -65,11 +66,48 @@ const PendingTradesView: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchPendingTrades();
-        // Optional: Set up polling if WebSockets are not yet implemented
-        // const intervalId = setInterval(fetchPendingTrades, 15000); // Poll every 15 seconds
-        // return () => clearInterval(intervalId);
+        fetchPendingTrades(); // Initial fetch
     }, []);
+
+    useEffect(() => {
+        const socket = io('http://127.0.0.1:5000');
+
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket server');
+        });
+
+        socket.on('new_trade_proposal', (proposal: TradeProposal) => {
+            console.log('Received new trade proposal via WebSocket:', proposal);
+            setPendingTrades(prevTrades => {
+                // Avoid duplicates and update existing if necessary
+                const existingTradeIndex = prevTrades.findIndex(t => t.trade_id === proposal.trade_id);
+                if (existingTradeIndex !== -1) {
+                    // Update existing trade if details can change, for now, let's assume new means new
+                    // or replace if status changes and it becomes pending again (less likely for this event)
+                    // For simplicity, if ID matches, could replace or ignore.
+                    // Let's add if not present, or replace if present to get latest state.
+                    const updatedTrades = [...prevTrades];
+                    updatedTrades[existingTradeIndex] = proposal;
+                    return updatedTrades;
+                } else {
+                    // Add as new if it's genuinely new and status is pending_approval
+                    if (proposal.status === 'pending_approval') {
+                       return [proposal, ...prevTrades]; // Add to the top
+                    }
+                    return prevTrades;
+                }
+            });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from WebSocket server');
+        });
+
+        return () => {
+            console.log('Disconnecting WebSocket');
+            socket.disconnect();
+        };
+    }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
 
 
     const handleApprove = async (tradeId: string) => {
@@ -161,14 +199,18 @@ const PendingTradesView: React.FC = () => {
                         <ListItem
                             key={trade.trade_id}
                             divider
-                            sx={{
+                            sx={(theme) => ({ // Added theme access here
                                 mb: 2,
                                 p: 2,
-                                border: '1px solid #ddd',
+                                border: `1px solid ${theme.palette.divider}`, // Use theme divider
                                 borderRadius: '8px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                                backgroundColor: trade.side === 'buy' ? 'rgba(76, 175, 80, 0.03)' : 'rgba(244, 67, 54, 0.03)'
-                            }}
+                                // boxShadow: '0 2px 4px rgba(0,0,0,0.1)', // Keep or remove based on dark theme preference
+                                // Use more visible background based on theme and side
+                                backgroundColor: trade.side === 'buy' ? 'rgba(102, 187, 106, 0.15)' : 'rgba(244, 67, 54, 0.15)',
+                                '&:hover': { // Optional: Add hover effect
+                                    borderColor: theme.palette.primary.light,
+                                }
+                            })}
                         >
                             <Grid container spacing={2} alignItems="flex-start">
                                 <Grid item xs={12} md={8}>
@@ -184,6 +226,7 @@ const PendingTradesView: React.FC = () => {
                                             label={trade.type.toUpperCase()}
                                             variant="outlined"
                                             size="small"
+                                            // sx={{ borderColor: theme.palette.text.secondary, color: theme.palette.text.secondary }} // Ensure visibility for outlined chip
                                         />
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary" display="block">ID: {trade.trade_id}</Typography>
@@ -197,7 +240,13 @@ const PendingTradesView: React.FC = () => {
                                         <Typography variant="body2">Agent Confidence: {(trade.sub_agent_confidence * 100).toFixed(0)}%</Typography>
                                     )}
                                     {trade.risk_assessment && (
-                                        <Box sx={{mt: 1.5, p:1.5, border: '1px dashed #ccc', borderRadius: '4px', backgroundColor: 'rgba(0,0,0,0.02)'}}>
+                                        <Box sx={(theme) => ({ // Added theme access here
+                                            mt: 1.5,
+                                            p:1.5,
+                                            border: `1px dashed ${theme.palette.divider}`, // Use theme divider
+                                            borderRadius: '4px',
+                                            backgroundColor: alpha(theme.palette.background.default, 0.5) // Slightly different background
+                                        })}>
                                             <Typography variant="overline" display="block" sx={{fontWeight: 'bold', lineHeight: 1.2, mb: 0.5}}>Risk Assessment:</Typography>
                                             <Typography variant="caption" display="block">Summary: {trade.risk_assessment.assessment_summary}</Typography>
                                             <Typography variant="caption" display="block">Score: {trade.risk_assessment.risk_score?.toFixed(2)} (Proceed: {trade.risk_assessment.proceed_with_trade ? 'Yes' : 'No'})</Typography>

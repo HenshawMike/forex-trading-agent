@@ -6,7 +6,14 @@
 .main-content {
   flex: 1;
   padding: 20px;
-  background-color: #f5f5f5;
+  /* Changed to a dark theme background color */
+  /* This will be largely controlled by ThemeProvider and CssBaseline now,
+     but setting a fallback or specific content area color can be done here.
+     Let's use a color slightly different from the absolute default for content area if desired,
+     or simply ensure it matches theme.palette.background.default.
+     For now, we'll assume CssBaseline handles the body, and this is for the direct content area.
+  */
+  background-color: #212121; /* Darker than paper, but not pitch black */
 }
 
 .navbar {
@@ -55,14 +62,19 @@
 }
 
 .stat-card {
-  background-color: white;
+  /* Changed to use a theme-appropriate paper color */
+  background-color: #2c2c2c; /* theme.palette.background.paper */
+  color: #f5f5f5; /* theme.text.primary */
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  /* Adjusted shadow for dark theme, or remove if not desired */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.24);
 }
 
 .trading-view {
-  background-color: white;
+  /* Changed to use a theme-appropriate paper color */
+  background-color: #2c2c2c; /* theme.palette.background.paper */
+  color: #f5f5f5; /* theme.text.primary */
   padding: 20px;
   border-radius: 8px;
 }
@@ -73,6 +85,18 @@
   gap: 15px;
   max-width: 300px;
 }
+
+/* Dark theme for inputs and selects within trading-controls */
+.trading-controls input[type="number"],
+.trading-controls select {
+  padding: 8px 12px;
+  border: 1px solid #555; /* Darker border */
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: #333; /* Dark background for inputs */
+  color: #f5f5f5; /* Light text for inputs */
+}
+
 
 .action-buttons {
   display: flex;
