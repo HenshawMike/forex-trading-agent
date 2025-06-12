@@ -2,10 +2,11 @@
   padding: 20px;
   max-width: 600px;
   margin: 0 auto;
+  /* Assuming the overall page background is dark via CssBaseline */
 }
 
 .settings h1 {
-  color: #333;
+  color: #f5f5f5; /* theme.text.primary */
   margin-bottom: 30px;
 }
 
@@ -23,21 +24,26 @@
 
 .form-group label {
   font-weight: bold;
-  color: #555;
+  color: #bdbdbd; /* theme.text.secondary */
 }
 
 .form-group input,
 .form-group select {
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #555; /* Darker border */
   border-radius: 4px;
   font-size: 16px;
+  background-color: #333; /* Dark background for inputs */
+  color: #f5f5f5; /* Light text for inputs */
 }
+
+/* Specific styling for select dropdown arrow in dark mode if needed, often handled by browser but can be tricky. */
+/* For now, relying on browser's default dark mode rendering for the arrow. */
 
 .save-button {
   padding: 12px 24px;
-  background-color: #007bff;
-  color: white;
+  background-color: #263238; /* theme.palette.primary.main */
+  color: #ffffff; /* theme.palette.primary.contrastText */
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -46,5 +52,5 @@
 }
 
 .save-button:hover {
-  background-color: #0056b3;
+  background-color: #1e272c; /* Slightly darker shade of primary.main */
 }
