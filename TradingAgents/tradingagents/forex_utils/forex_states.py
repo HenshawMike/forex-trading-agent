@@ -80,3 +80,56 @@ class TimeInForce(Enum):
     FOK = "FOK"  # Fill or Kill
     DAY = "DAY"  # Good for the day (session)
     # GTD = "GTD" # Good 'Til Date/Time (if needed)
+
+class Candlestick(TypedDict):
+    timestamp: float  # Unix timestamp (seconds)
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: Optional[float]
+    bid_close: Optional[float] # Optional bid close price for the candlestick period
+    ask_close: Optional[float] # Optional ask close price for the candlestick period
+
+class Tick(TypedDict):
+    symbol: str # Symbol/currency pair
+    timestamp: float # Unix timestamp (seconds), can include milliseconds
+    bid: float
+    ask: float
+    last: Optional[float] # Optional last traded price if available
+    volume: Optional[float] # Optional volume for this tick
+
+class AccountInfo(TypedDict):
+    account_id: str
+    balance: float
+    equity: float
+    margin: float
+    free_margin: float
+    margin_level: Optional[float]  # Can be float('inf') or a percentage
+    currency: str
+
+class OrderResponse(TypedDict):
+    order_id: str
+    status: str  # e.g., "PENDING", "FILLED", "REJECTED", "CANCELLED", "MODIFIED", "CLOSED"
+    symbol: Optional[str]
+    side: Optional[OrderSide]
+    type: Optional[OrderType]
+    volume: Optional[float]
+    price: Optional[float] # Requested price for pending, fill price for market/filled
+    timestamp: float  # Unix timestamp of the response/event
+    error_message: Optional[str]
+    position_id: Optional[str] # Associated position ID if order resulted in/affected a position
+
+class Position(TypedDict):
+    position_id: str
+    symbol: str
+    side: OrderSide  # BUY or SELL
+    volume: float  # In lots
+    entry_price: float
+    current_price: float # Last valuation price
+    profit_loss: float # Current unrealized P/L in account currency (excluding commission on open)
+    stop_loss: Optional[float]
+    take_profit: Optional[float]
+    open_time: float  # Unix timestamp
+    magic_number: Optional[int]
+    comment: Optional[str]

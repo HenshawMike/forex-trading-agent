@@ -1,0 +1,330 @@
+MT5Broker INFO: MetaTrader5 package not found. MT5 functionality will be disabled and mocked.
+--- Starting Backtest Run Script ---
+SimulatedBroker initialized. Capital: 10000.0, Base Slippage: 0.2 pips, Volume Slippage Factor: 0.1 pips/million, Leverage: 100:1, Account Currency: USD, Margin Warning: 100.0%, Stop Out: 50.0%
+Generated 2160 dummy bars for EURUSD
+Generated 2160 dummy bars for USDJPY
+SimBroker: Loaded 2160 (out of 2160 provided) bars of test data for EURUSD after validation.
+SimBroker: Loaded 2160 (out of 2160 provided) bars of test data for USDJPY after validation.
+Attempting to import and initialize ForexTradingGraph...
+MT5Broker INFO: MetaTrader5 package not found. MT5 functionality will be disabled and mocked.
+Could not initialize ForexTradingGraph: cannot import name 'NaN' from 'numpy' (/home/swebot/.local/lib/python3.10/site-packages/numpy/__init__.py). Falling back to DummyStrategyForTesting.
+Using DummyStrategyForTesting.
+Initializing BacktestingEngine with DummyStrategyForTesting.
+BacktestingEngine initialized for EURUSD.
+Data for EURUSD: 2160 bars.
+
+--- Commencing Engine Run ---
+--- Starting Backtesting Run for EURUSD ---
+Initial Account: Balance: 10000.00, Equity: 10000.00
+SimBroker: BUY 0.01 EURUSD @ 1.07921 (spread/slip incl). PosID: ad4af940-02b4-4193-bd32-2c27cd92380d. Comm: 0.03
+SimBroker: SELL 0.01 EURUSD @ 1.08009 (spread/slip incl). PosID: b1ae2280-b921-4df7-8a1c-c97bc647f013. Comm: 0.03
+SimBroker: BUY 0.01 EURUSD @ 1.07938 (spread/slip incl). PosID: 5dd3c1de-539e-4e7a-a2ce-e8de5273b1bb. Comm: 0.03
+SimBroker: Position b1ae2280-b921-4df7-8a1c-c97bc647f013 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08214 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 10.82
+SimBroker: SELL 0.01 EURUSD @ 1.08087 (spread/slip incl). PosID: 46c663a8-dd07-4297-848e-8f84a44173a4. Comm: 0.03
+SimBroker: BUY 0.01 EURUSD @ 1.07993 (spread/slip incl). PosID: 294e25da-cf26-41ca-a4fb-6864e1259d2b. Comm: 0.03
+SimBroker: Position ad4af940-02b4-4193-bd32-2c27cd92380d (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08316 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.83
+SimBroker: Position 5dd3c1de-539e-4e7a-a2ce-e8de5273b1bb (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08328 by TAKE_PROFIT_HIT. P/L: 3.90. Margin Freed: 10.83
+SimBroker: Position 46c663a8-dd07-4297-848e-8f84a44173a4 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08292 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 10.83
+SimBroker: Position 294e25da-cf26-41ca-a4fb-6864e1259d2b (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08383 by TAKE_PROFIT_HIT. P/L: 3.90. Margin Freed: 10.83
+SimBroker: SELL 0.01 EURUSD @ 1.08204 (spread/slip incl). PosID: 57e7256b-44fe-4aac-9ba0-329d63a03618. Comm: 0.03
+SimBroker: BUY 0.01 EURUSD @ 1.0802 (spread/slip incl). PosID: 347d33a1-580d-45b4-a683-84f54f31410a. Comm: 0.03
+SimBroker: Position 57e7256b-44fe-4aac-9ba0-329d63a03618 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.07809 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.78
+SimBroker: Position 347d33a1-580d-45b4-a683-84f54f31410a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.07811 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 10.78
+SimBroker: SELL 0.01 EURUSD @ 1.07931 (spread/slip incl). PosID: c42ae708-bf8b-4711-9fdf-c01dd1eec798. Comm: 0.03
+SimBroker: Position c42ae708-bf8b-4711-9fdf-c01dd1eec798 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08136 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 10.81
+SimBroker: BUY 0.01 EURUSD @ 1.07803 (spread/slip incl). PosID: 852ddd0a-e11f-4391-85d2-5a3ca2d5ba1a. Comm: 0.03
+SimBroker: Position 852ddd0a-e11f-4391-85d2-5a3ca2d5ba1a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.07598 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 10.76
+SimBroker: SELL 0.01 EURUSD @ 1.07558 (spread/slip incl). PosID: 8719d30d-894f-4b53-88e9-caf118f06526. Comm: 0.03
+SimBroker: Position 8719d30d-894f-4b53-88e9-caf118f06526 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.07767 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 10.77
+Processing Bar 200/2160 | Time: 2023-01-09T07:00:00+00:00 | EURUSD C: 1.07909
+SimBroker: BUY 0.01 EURUSD @ 1.07953 (spread/slip incl). PosID: 4b39723a-8e68-48d9-8d90-6b44a2ef377a. Comm: 0.03
+SimBroker: SELL 0.01 EURUSD @ 1.08135 (spread/slip incl). PosID: 5b5d051e-63a0-4b4d-aa00-1856d1a4d917. Comm: 0.03
+SimBroker: Position 4b39723a-8e68-48d9-8d90-6b44a2ef377a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.07747 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 10.77
+SimBroker: Position 5b5d051e-63a0-4b4d-aa00-1856d1a4d917 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.07743 by TAKE_PROFIT_HIT. P/L: 3.92. Margin Freed: 10.77
+SimBroker: BUY 0.01 EURUSD @ 1.07607 (spread/slip incl). PosID: 6373b895-3139-4c4d-8241-cf82b2982042. Comm: 0.03
+SimBroker: Position 6373b895-3139-4c4d-8241-cf82b2982042 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08 by TAKE_PROFIT_HIT. P/L: 3.93. Margin Freed: 10.80
+SimBroker: SELL 0.01 EURUSD @ 1.08195 (spread/slip incl). PosID: 3937aeab-8bb2-4dda-8983-1be5afd5c493. Comm: 0.03
+SimBroker: Position 3937aeab-8bb2-4dda-8983-1be5afd5c493 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.07801 by TAKE_PROFIT_HIT. P/L: 3.94. Margin Freed: 10.78
+SimBroker: BUY 0.01 EURUSD @ 1.07797 (spread/slip incl). PosID: d3c27f84-eb0a-4089-a3cd-c1e37091d41a. Comm: 0.03
+SimBroker: Position d3c27f84-eb0a-4089-a3cd-c1e37091d41a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08188 by TAKE_PROFIT_HIT. P/L: 3.91. Margin Freed: 10.80
+SimBroker: SELL 0.01 EURUSD @ 1.0802 (spread/slip incl). PosID: 1b16ef1d-7980-41d9-aef3-cfecbc1fc6c0. Comm: 0.03
+SimBroker: Position 1b16ef1d-7980-41d9-aef3-cfecbc1fc6c0 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.07629 by TAKE_PROFIT_HIT. P/L: 3.91. Margin Freed: 10.76
+SimBroker: BUY 0.01 EURUSD @ 1.07518 (spread/slip incl). PosID: 55858c1f-ce1d-4be2-ac45-4a90c35b618c. Comm: 0.03
+SimBroker: Position 55858c1f-ce1d-4be2-ac45-4a90c35b618c (EURUSD BUY 0.01 lot(s)) CLOSED at 1.07312 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 10.73
+SimBroker: SELL 0.01 EURUSD @ 1.08611 (spread/slip incl). PosID: 4635143d-c567-4d80-adfc-b7bcc3f55998. Comm: 0.03
+SimBroker: Position 4635143d-c567-4d80-adfc-b7bcc3f55998 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08819 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 10.88
+SimBroker: BUY 0.01 EURUSD @ 1.08869 (spread/slip incl). PosID: 5fa40db3-fe29-480e-ae96-2797c63c0ff4. Comm: 0.03
+SimBroker: Position 5fa40db3-fe29-480e-ae96-2797c63c0ff4 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08662 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 10.87
+SimBroker: SELL 0.01 EURUSD @ 1.08764 (spread/slip incl). PosID: 8422f6f9-bcef-4ad9-9641-a843473f758b. Comm: 0.03
+SimBroker: Position 8422f6f9-bcef-4ad9-9641-a843473f758b (EURUSD SELL 0.01 lot(s)) CLOSED at 1.0897 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 10.90
+Processing Bar 400/2160 | Time: 2023-01-17T15:00:00+00:00 | EURUSD C: 1.08692
+SimBroker: BUY 0.01 EURUSD @ 1.0864 (spread/slip incl). PosID: 27e9c4ac-675f-49da-9f3f-3c0499360c88. Comm: 0.03
+SimBroker: Position 27e9c4ac-675f-49da-9f3f-3c0499360c88 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08432 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 10.85
+SimBroker: SELL 0.01 EURUSD @ 1.08627 (spread/slip incl). PosID: 4aa34045-461d-48e2-9731-c737753ad1da. Comm: 0.03
+SimBroker: BUY 0.01 EURUSD @ 1.08423 (spread/slip incl). PosID: d4012d9c-488f-4a3e-be7b-fe00b3a5173e. Comm: 0.03
+SimBroker: Position 4aa34045-461d-48e2-9731-c737753ad1da (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08235 by TAKE_PROFIT_HIT. P/L: 3.92. Margin Freed: 10.82
+SimBroker: Position d4012d9c-488f-4a3e-be7b-fe00b3a5173e (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08215 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 10.82
+SimBroker: SELL 0.01 EURUSD @ 1.08091 (spread/slip incl). PosID: d9be07a6-d3ec-48e8-bf26-d24b62388985. Comm: 0.03
+SimBroker: Position d9be07a6-d3ec-48e8-bf26-d24b62388985 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08296 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 10.83
+SimBroker: BUY 0.01 EURUSD @ 1.08505 (spread/slip incl). PosID: 89cd0e32-946b-477a-96d1-384dbdea7896. Comm: 0.03
+SimBroker: Position 89cd0e32-946b-477a-96d1-384dbdea7896 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.089 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.89
+SimBroker: SELL 0.01 EURUSD @ 1.09502 (spread/slip incl). PosID: 32fd3b91-78e5-4b2e-8136-684899bcbf4a. Comm: 0.03
+SimBroker: Position 32fd3b91-78e5-4b2e-8136-684899bcbf4a (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09709 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 10.97
+SimBroker: BUY 0.01 EURUSD @ 1.09971 (spread/slip incl). PosID: 32d9bab2-7952-491c-b0bc-4e4e6b1195af. Comm: 0.03
+SimBroker: Position 32d9bab2-7952-491c-b0bc-4e4e6b1195af (EURUSD BUY 0.01 lot(s)) CLOSED at 1.10364 by TAKE_PROFIT_HIT. P/L: 3.93. Margin Freed: 11.04
+SimBroker: SELL 0.01 EURUSD @ 1.09833 (spread/slip incl). PosID: dfece7ca-8854-4ed6-85a8-49d691fc64c6. Comm: 0.03
+SimBroker: Position dfece7ca-8854-4ed6-85a8-49d691fc64c6 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10037 by STOP_LOSS_HIT. P/L: -2.04. Margin Freed: 11.01
+SimBroker: BUY 0.01 EURUSD @ 1.1004 (spread/slip incl). PosID: fbfee588-46f0-4288-95ab-0d800e1f74fc. Comm: 0.03
+SimBroker: Position fbfee588-46f0-4288-95ab-0d800e1f74fc (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09835 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 10.98
+SimBroker: SELL 0.01 EURUSD @ 1.09922 (spread/slip incl). PosID: efe19d8f-bb29-47ed-ab82-7667f330627e. Comm: 0.03
+SimBroker: Position efe19d8f-bb29-47ed-ab82-7667f330627e (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10132 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 11.02
+SimBroker: BUY 0.01 EURUSD @ 1.10047 (spread/slip incl). PosID: a951fd85-bfc1-4ea2-8bf8-d5e10b5bdedd. Comm: 0.03
+Processing Bar 600/2160 | Time: 2023-01-25T23:00:00+00:00 | EURUSD C: 1.09831
+SimBroker: Position a951fd85-bfc1-4ea2-8bf8-d5e10b5bdedd (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09842 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 10.98
+SimBroker: SELL 0.01 EURUSD @ 1.0957 (spread/slip incl). PosID: bd0bf768-1eb2-4689-b11a-89ea6aed9bbc. Comm: 0.03
+SimBroker: Position bd0bf768-1eb2-4689-b11a-89ea6aed9bbc (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09175 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.91
+SimBroker: BUY 0.01 EURUSD @ 1.09869 (spread/slip incl). PosID: f3050b50-5726-4126-aa93-fab9523d4cbf. Comm: 0.03
+SimBroker: Position f3050b50-5726-4126-aa93-fab9523d4cbf (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09662 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 10.97
+SimBroker: SELL 0.01 EURUSD @ 1.1049 (spread/slip incl). PosID: d7c956f8-f73f-4b19-8b43-8e28de669bdb. Comm: 0.03
+SimBroker: Position d7c956f8-f73f-4b19-8b43-8e28de669bdb (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10099 by TAKE_PROFIT_HIT. P/L: 3.91. Margin Freed: 11.01
+SimBroker: BUY 0.01 EURUSD @ 1.10216 (spread/slip incl). PosID: 1cf9d916-27b4-499f-997f-ce2e46456593. Comm: 0.03
+SimBroker: Position 1cf9d916-27b4-499f-997f-ce2e46456593 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.10611 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 11.06
+SimBroker: SELL 0.01 EURUSD @ 1.10589 (spread/slip incl). PosID: 7a89bcfc-f17a-4b77-8a9c-5874513daf0a. Comm: 0.03
+SimBroker: Position 7a89bcfc-f17a-4b77-8a9c-5874513daf0a (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10793 by STOP_LOSS_HIT. P/L: -2.04. Margin Freed: 11.09
+SimBroker: BUY 0.01 EURUSD @ 1.10466 (spread/slip incl). PosID: 232b44cf-689c-4d61-9c5d-e0a634978aa8. Comm: 0.03
+SimBroker: Position 232b44cf-689c-4d61-9c5d-e0a634978aa8 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.10257 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 11.02
+SimBroker: SELL 0.01 EURUSD @ 1.10471 (spread/slip incl). PosID: 616c1734-794b-4f86-9002-8806473b838b. Comm: 0.03
+SimBroker: Position 616c1734-794b-4f86-9002-8806473b838b (EURUSD SELL 0.01 lot(s)) CLOSED at 1.1068 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 11.08
+SimBroker: BUY 0.01 EURUSD @ 1.10503 (spread/slip incl). PosID: f20ffdbb-515b-4ae0-8f73-e1467bc0ff34. Comm: 0.03
+SimBroker: Position f20ffdbb-515b-4ae0-8f73-e1467bc0ff34 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.10898 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 11.09
+SimBroker: SELL 0.01 EURUSD @ 1.11538 (spread/slip incl). PosID: 765bcfb9-f837-421b-a12d-28d9e56f2d77. Comm: 0.03
+SimBroker: Position 765bcfb9-f837-421b-a12d-28d9e56f2d77 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11148 by TAKE_PROFIT_HIT. P/L: 3.90. Margin Freed: 11.12
+SimBroker: BUY 0.01 EURUSD @ 1.1109 (spread/slip incl). PosID: e152718f-d2a2-41dc-ab5e-1396328986f9. Comm: 0.03
+Processing Bar 800/2160 | Time: 2023-02-03T07:00:00+00:00 | EURUSD C: 1.11498
+SimBroker: Position e152718f-d2a2-41dc-ab5e-1396328986f9 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11481 by TAKE_PROFIT_HIT. P/L: 3.91. Margin Freed: 11.15
+SimBroker: SELL 0.01 EURUSD @ 1.10895 (spread/slip incl). PosID: 88d4d6b1-4f79-4b1f-9479-d2bd74ecd4dd. Comm: 0.03
+SimBroker: Position 88d4d6b1-4f79-4b1f-9479-d2bd74ecd4dd (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10501 by TAKE_PROFIT_HIT. P/L: 3.94. Margin Freed: 11.05
+SimBroker: BUY 0.01 EURUSD @ 1.1095 (spread/slip incl). PosID: 0a3082d0-d618-4e93-a851-3d61b18ad6ba. Comm: 0.03
+SimBroker: Position 0a3082d0-d618-4e93-a851-3d61b18ad6ba (EURUSD BUY 0.01 lot(s)) CLOSED at 1.1074 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 11.07
+SimBroker: SELL 0.01 EURUSD @ 1.09636 (spread/slip incl). PosID: 55b5427f-4293-42dc-a361-a2e2686f3611. Comm: 0.03
+SimBroker: Position 55b5427f-4293-42dc-a361-a2e2686f3611 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09846 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 10.99
+SimBroker: BUY 0.01 EURUSD @ 1.10402 (spread/slip incl). PosID: 015b81a7-ecc1-4d5d-8daa-a683b58f043a. Comm: 0.03
+SimBroker: Position 015b81a7-ecc1-4d5d-8daa-a683b58f043a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.10795 by TAKE_PROFIT_HIT. P/L: 3.93. Margin Freed: 11.05
+SimBroker: SELL 0.01 EURUSD @ 1.10422 (spread/slip incl). PosID: 8e20995e-7ef8-4fea-bbc2-b65caf082ae0. Comm: 0.03
+SimBroker: Position 8e20995e-7ef8-4fea-bbc2-b65caf082ae0 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10027 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 11.00
+SimBroker: BUY 0.01 EURUSD @ 1.09042 (spread/slip incl). PosID: 58759dca-0328-4aca-821b-483bf82bcfdb. Comm: 0.03
+SimBroker: Position 58759dca-0328-4aca-821b-483bf82bcfdb (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08835 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 10.87
+SimBroker: SELL 0.01 EURUSD @ 1.10071 (spread/slip incl). PosID: dc8008b8-f495-4a59-975c-f419b0ff6c54. Comm: 0.03
+SimBroker: Position dc8008b8-f495-4a59-975c-f419b0ff6c54 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10277 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 11.03
+SimBroker: BUY 0.01 EURUSD @ 1.10543 (spread/slip incl). PosID: eefbd0bc-701c-4bb4-bd17-a6f406e61e3b. Comm: 0.03
+SimBroker: Position eefbd0bc-701c-4bb4-bd17-a6f406e61e3b (EURUSD BUY 0.01 lot(s)) CLOSED at 1.10937 by TAKE_PROFIT_HIT. P/L: 3.94. Margin Freed: 11.10
+Processing Bar 1000/2160 | Time: 2023-02-11T15:00:00+00:00 | EURUSD C: 1.11622
+SimBroker: SELL 0.01 EURUSD @ 1.11336 (spread/slip incl). PosID: 3e5865b2-3846-42bf-91fb-2fc2d9eab583. Comm: 0.03
+SimBroker: Position 3e5865b2-3846-42bf-91fb-2fc2d9eab583 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11541 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 11.14
+SimBroker: BUY 0.01 EURUSD @ 1.11822 (spread/slip incl). PosID: 7b6cead6-c0d6-4a68-810c-0e5c26e252b2. Comm: 0.03
+SimBroker: Position 7b6cead6-c0d6-4a68-810c-0e5c26e252b2 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11617 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 11.15
+SimBroker: SELL 0.01 EURUSD @ 1.11187 (spread/slip incl). PosID: 39b54f64-dcc0-46c3-a22f-2004a9660c82. Comm: 0.03
+SimBroker: Position 39b54f64-dcc0-46c3-a22f-2004a9660c82 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11397 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 11.15
+SimBroker: BUY 0.01 EURUSD @ 1.10929 (spread/slip incl). PosID: b4954306-22f6-4653-9140-bba48b559051. Comm: 0.03
+SimBroker: Position b4954306-22f6-4653-9140-bba48b559051 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11324 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 11.13
+SimBroker: SELL 0.01 EURUSD @ 1.11575 (spread/slip incl). PosID: 669176ce-6cc1-4306-8833-95793e95f90f. Comm: 0.03
+SimBroker: BUY 0.01 EURUSD @ 1.11611 (spread/slip incl). PosID: c52b94f6-aee8-4f02-a89b-0add30fd2168. Comm: 0.03
+SimBroker: Position 669176ce-6cc1-4306-8833-95793e95f90f (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11783 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 11.18
+SimBroker: SELL 0.01 EURUSD @ 1.1186 (spread/slip incl). PosID: 1d5da1a4-3e86-4935-be2f-f793763f6319. Comm: 0.03
+SimBroker: Position 1d5da1a4-3e86-4935-be2f-f793763f6319 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11468 by TAKE_PROFIT_HIT. P/L: 3.92. Margin Freed: 11.14
+SimBroker: Position c52b94f6-aee8-4f02-a89b-0add30fd2168 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11406 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 11.16
+SimBroker: BUY 0.01 EURUSD @ 1.12614 (spread/slip incl). PosID: 8d2067cb-78d9-4a82-8db5-0ff8f47e7c30. Comm: 0.03
+SimBroker: Position 8d2067cb-78d9-4a82-8db5-0ff8f47e7c30 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.1241 by STOP_LOSS_HIT. P/L: -2.04. Margin Freed: 11.25
+SimBroker: SELL 0.01 EURUSD @ 1.11594 (spread/slip incl). PosID: 1291b7cc-d5b1-458c-8abc-47e3967a6c56. Comm: 0.03
+SimBroker: Position 1291b7cc-d5b1-458c-8abc-47e3967a6c56 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11802 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 11.18
+SimBroker: BUY 0.01 EURUSD @ 1.12067 (spread/slip incl). PosID: 3c185065-9db0-4d8e-aee5-2d25c404d266. Comm: 0.03
+SimBroker: Position 3c185065-9db0-4d8e-aee5-2d25c404d266 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11859 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 11.17
+SimBroker: SELL 0.01 EURUSD @ 1.12106 (spread/slip incl). PosID: 5eea6598-7d99-4763-9669-657c0c5eec2d. Comm: 0.03
+SimBroker: Position 5eea6598-7d99-4763-9669-657c0c5eec2d (EURUSD SELL 0.01 lot(s)) CLOSED at 1.12311 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 11.24
+Processing Bar 1200/2160 | Time: 2023-02-19T23:00:00+00:00 | EURUSD C: 1.12218
+SimBroker: BUY 0.01 EURUSD @ 1.11757 (spread/slip incl). PosID: d5195c6c-20ba-44d0-8099-bb4ef4ae5c44. Comm: 0.03
+SimBroker: Position d5195c6c-20ba-44d0-8099-bb4ef4ae5c44 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11548 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 11.15
+SimBroker: SELL 0.01 EURUSD @ 1.11626 (spread/slip incl). PosID: 97d82bd2-0e8f-43e0-b51d-adebc9bbec3d. Comm: 0.03
+SimBroker: Position 97d82bd2-0e8f-43e0-b51d-adebc9bbec3d (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11236 by TAKE_PROFIT_HIT. P/L: 3.90. Margin Freed: 11.10
+SimBroker: BUY 0.01 EURUSD @ 1.11079 (spread/slip incl). PosID: 550fffa7-9943-4b75-beb1-4fd6d07eb026. Comm: 0.03
+SimBroker: Position 550fffa7-9943-4b75-beb1-4fd6d07eb026 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.1087 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 11.09
+SimBroker: SELL 0.01 EURUSD @ 1.10621 (spread/slip incl). PosID: aa744b09-f2ed-4f21-bd48-da9bfe7023a7. Comm: 0.03
+SimBroker: Position aa744b09-f2ed-4f21-bd48-da9bfe7023a7 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.1083 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 11.10
+SimBroker: BUY 0.01 EURUSD @ 1.11241 (spread/slip incl). PosID: ee5151d2-3076-4efe-9b1b-ca2e107507fa. Comm: 0.03
+SimBroker: Position ee5151d2-3076-4efe-9b1b-ca2e107507fa (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11636 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 11.16
+SimBroker: SELL 0.01 EURUSD @ 1.12204 (spread/slip incl). PosID: 2e552c9c-590f-4665-979b-0c6ca49f37e2. Comm: 0.03
+SimBroker: Position 2e552c9c-590f-4665-979b-0c6ca49f37e2 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.12411 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 11.25
+SimBroker: BUY 0.01 EURUSD @ 1.1228 (spread/slip incl). PosID: 0b84dd46-d5ec-47eb-bff9-4691912dc7a5. Comm: 0.03
+SimBroker: Position 0b84dd46-d5ec-47eb-bff9-4691912dc7a5 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.12072 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 11.20
+SimBroker: SELL 0.01 EURUSD @ 1.12489 (spread/slip incl). PosID: 9e81adab-dd2c-40ea-8d39-6a5295bba20f. Comm: 0.03
+SimBroker: Position 9e81adab-dd2c-40ea-8d39-6a5295bba20f (EURUSD SELL 0.01 lot(s)) CLOSED at 1.12094 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 11.20
+SimBroker: BUY 0.01 EURUSD @ 1.11836 (spread/slip incl). PosID: cc39fbbd-5643-472c-ac0c-2269b721d1e0. Comm: 0.03
+SimBroker: Position cc39fbbd-5643-472c-ac0c-2269b721d1e0 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11629 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 11.15
+SimBroker: SELL 0.01 EURUSD @ 1.10728 (spread/slip incl). PosID: 8aa161ad-9082-4f0b-ba13-87a803e82b97. Comm: 0.03
+SimBroker: Position 8aa161ad-9082-4f0b-ba13-87a803e82b97 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.10336 by TAKE_PROFIT_HIT. P/L: 3.92. Margin Freed: 11.02
+Processing Bar 1400/2160 | Time: 2023-02-28T07:00:00+00:00 | EURUSD C: 1.09462
+SimBroker: BUY 0.01 EURUSD @ 1.08115 (spread/slip incl). PosID: b407ffb7-3796-47ce-adeb-21270ad97c85. Comm: 0.03
+SimBroker: Position b407ffb7-3796-47ce-adeb-21270ad97c85 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.0851 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.85
+SimBroker: SELL 0.01 EURUSD @ 1.08145 (spread/slip incl). PosID: e1899c06-fa57-47c0-b2c7-f62b0f191285. Comm: 0.03
+SimBroker: Position e1899c06-fa57-47c0-b2c7-f62b0f191285 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08351 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 10.83
+SimBroker: BUY 0.01 EURUSD @ 1.09015 (spread/slip incl). PosID: 4a2346c1-66d7-40aa-9103-13432a2829f3. Comm: 0.03
+SimBroker: Position 4a2346c1-66d7-40aa-9103-13432a2829f3 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09409 by TAKE_PROFIT_HIT. P/L: 3.94. Margin Freed: 10.94
+SimBroker: SELL 0.01 EURUSD @ 1.09443 (spread/slip incl). PosID: 4651199e-9365-4b45-a3a2-710a06f749fe. Comm: 0.03
+SimBroker: Position 4651199e-9365-4b45-a3a2-710a06f749fe (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09048 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.88
+SimBroker: BUY 0.01 EURUSD @ 1.09322 (spread/slip incl). PosID: 2dd7a96c-2c48-4847-b5e2-614c2a64b47e. Comm: 0.03
+SimBroker: Position 2dd7a96c-2c48-4847-b5e2-614c2a64b47e (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09118 by STOP_LOSS_HIT. P/L: -2.04. Margin Freed: 10.89
+SimBroker: SELL 0.01 EURUSD @ 1.11038 (spread/slip incl). PosID: 28d7e707-6f0a-4185-8d6f-45adce45f0d4. Comm: 0.03
+SimBroker: Position 28d7e707-6f0a-4185-8d6f-45adce45f0d4 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11247 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 11.13
+SimBroker: BUY 0.01 EURUSD @ 1.11544 (spread/slip incl). PosID: 379e8794-6ce4-4b9b-9266-cd4b5f9ad4b2. Comm: 0.03
+SimBroker: Position 379e8794-6ce4-4b9b-9266-cd4b5f9ad4b2 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11335 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 11.13
+SimBroker: SELL 0.01 EURUSD @ 1.11151 (spread/slip incl). PosID: dd0dbd54-1173-4e9b-a458-5823fc995945. Comm: 0.03
+SimBroker: Position dd0dbd54-1173-4e9b-a458-5823fc995945 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11356 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 11.14
+SimBroker: BUY 0.01 EURUSD @ 1.10189 (spread/slip incl). PosID: 3a7952ca-d089-47f7-84dd-3238957a5b2b. Comm: 0.03
+SimBroker: Position 3a7952ca-d089-47f7-84dd-3238957a5b2b (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09983 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 11.00
+Processing Bar 1600/2160 | Time: 2023-03-08T15:00:00+00:00 | EURUSD C: 1.10056
+SimBroker: SELL 0.01 EURUSD @ 1.11717 (spread/slip incl). PosID: 367b7338-8fa7-4dae-ba06-0061020e1db5. Comm: 0.03
+SimBroker: Position 367b7338-8fa7-4dae-ba06-0061020e1db5 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11923 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 11.19
+SimBroker: BUY 0.01 EURUSD @ 1.1149 (spread/slip incl). PosID: 944b0d99-cf75-4582-965c-07add24fe5d1. Comm: 0.03
+SimBroker: Position 944b0d99-cf75-4582-965c-07add24fe5d1 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11885 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 11.22
+SimBroker: SELL 0.01 EURUSD @ 1.11667 (spread/slip incl). PosID: 4be2f44c-656e-4283-b08b-45cdeee175c0. Comm: 0.03
+SimBroker: Position 4be2f44c-656e-4283-b08b-45cdeee175c0 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11873 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 11.19
+SimBroker: BUY 0.01 EURUSD @ 1.11303 (spread/slip incl). PosID: edda6cff-3947-4b3a-a550-c749a1574c04. Comm: 0.03
+SimBroker: Position edda6cff-3947-4b3a-a550-c749a1574c04 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11098 by STOP_LOSS_HIT. P/L: -2.05. Margin Freed: 11.10
+SimBroker: SELL 0.01 EURUSD @ 1.10969 (spread/slip incl). PosID: 2c4c4f3d-5097-409d-9779-905a452d8a7d. Comm: 0.03
+SimBroker: Position 2c4c4f3d-5097-409d-9779-905a452d8a7d (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11179 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 11.14
+SimBroker: BUY 0.01 EURUSD @ 1.11607 (spread/slip incl). PosID: 75eaa02a-12d4-4407-8aeb-3a4a1beb0aab. Comm: 0.03
+SimBroker: Position 75eaa02a-12d4-4407-8aeb-3a4a1beb0aab (EURUSD BUY 0.01 lot(s)) CLOSED at 1.11399 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 11.12
+SimBroker: SELL 0.01 EURUSD @ 1.11795 (spread/slip incl). PosID: ec37a37a-4bc3-40a1-ae59-f03a1eb64ffa. Comm: 0.03
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+findfont: Font family 'Arial' not found.
+/home/swebot/.local/lib/python3.10/site-packages/quantstats/_plotting/core.py:294: FutureWarning: Passing additional kwargs to DatetimeIndexResampler.sum has no impact on the result and is deprecated. This will raise a TypeError in a future version of pandas.
+  returns = returns.last() if compound is True else returns.sum(axis=0)
+SimBroker: Position ec37a37a-4bc3-40a1-ae59-f03a1eb64ffa (EURUSD SELL 0.01 lot(s)) CLOSED at 1.11402 by TAKE_PROFIT_HIT. P/L: 3.93. Margin Freed: 11.13
+SimBroker: BUY 0.01 EURUSD @ 1.10195 (spread/slip incl). PosID: 6693b7cb-acdd-47a2-b503-84a5659c75e4. Comm: 0.03
+SimBroker: Position 6693b7cb-acdd-47a2-b503-84a5659c75e4 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09985 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 10.99
+SimBroker: SELL 0.01 EURUSD @ 1.09723 (spread/slip incl). PosID: 28c8bfd0-aa9d-4291-a8b7-611ea1c0e164. Comm: 0.03
+SimBroker: Position 28c8bfd0-aa9d-4291-a8b7-611ea1c0e164 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09933 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 11.01
+Processing Bar 1800/2160 | Time: 2023-03-16T23:00:00+00:00 | EURUSD C: 1.08908
+SimBroker: BUY 0.01 EURUSD @ 1.08922 (spread/slip incl). PosID: 33818349-ab87-40e2-9a61-cceaec1c310a. Comm: 0.03
+SimBroker: Position 33818349-ab87-40e2-9a61-cceaec1c310a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08716 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 10.86
+SimBroker: SELL 0.01 EURUSD @ 1.09781 (spread/slip incl). PosID: 64dddc45-e977-4a78-bc53-1a720d28ec8e. Comm: 0.03
+SimBroker: Position 64dddc45-e977-4a78-bc53-1a720d28ec8e (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09987 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 11.01
+SimBroker: BUY 0.01 EURUSD @ 1.1021 (spread/slip incl). PosID: 4b8b7694-62a4-47f2-ab77-47ec07897a5a. Comm: 0.03
+SimBroker: Position 4b8b7694-62a4-47f2-ab77-47ec07897a5a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.10004 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 11.00
+SimBroker: SELL 0.01 EURUSD @ 1.09292 (spread/slip incl). PosID: f0c84f1d-0489-4a0d-b920-b6f518e046fa. Comm: 0.03
+SimBroker: Position f0c84f1d-0489-4a0d-b920-b6f518e046fa (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08899 by TAKE_PROFIT_HIT. P/L: 3.93. Margin Freed: 10.89
+SimBroker: BUY 0.01 EURUSD @ 1.08459 (spread/slip incl). PosID: bc4bf442-2bed-4255-abeb-bead6ccfdb9c. Comm: 0.03
+SimBroker: Position bc4bf442-2bed-4255-abeb-bead6ccfdb9c (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08854 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.91
+SimBroker: SELL 0.01 EURUSD @ 1.08722 (spread/slip incl). PosID: 235a9eae-f467-44a6-99e8-4b10879e66cc. Comm: 0.03
+SimBroker: Position 235a9eae-f467-44a6-99e8-4b10879e66cc (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08327 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.82
+SimBroker: BUY 0.01 EURUSD @ 1.09006 (spread/slip incl). PosID: 0c4229d8-c8ab-4349-90df-7a5ef78a5ed8. Comm: 0.03
+SimBroker: Position 0c4229d8-c8ab-4349-90df-7a5ef78a5ed8 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08799 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 10.85
+SimBroker: SELL 0.01 EURUSD @ 1.08378 (spread/slip incl). PosID: aeb916a1-9efb-41cc-8cb0-f75a77076816. Comm: 0.03
+SimBroker: Position aeb916a1-9efb-41cc-8cb0-f75a77076816 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.07985 by TAKE_PROFIT_HIT. P/L: 3.93. Margin Freed: 10.80
+SimBroker: BUY 0.01 EURUSD @ 1.08384 (spread/slip incl). PosID: 4c191696-3292-44bc-88ed-36753cda135e. Comm: 0.03
+SimBroker: Position 4c191696-3292-44bc-88ed-36753cda135e (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08178 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 10.80
+SimBroker: SELL 0.01 EURUSD @ 1.08536 (spread/slip incl). PosID: 0a761a31-8899-44c4-bf3a-dc874f166d08. Comm: 0.03
+SimBroker: Position 0a761a31-8899-44c4-bf3a-dc874f166d08 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08743 by STOP_LOSS_HIT. P/L: -2.07. Margin Freed: 10.89
+SimBroker: BUY 0.01 EURUSD @ 1.08879 (spread/slip incl). PosID: dbf7aff0-37f6-462a-be8c-f2cc7d1a0ca3. Comm: 0.03
+SimBroker: Position dbf7aff0-37f6-462a-be8c-f2cc7d1a0ca3 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08675 by STOP_LOSS_HIT. P/L: -2.04. Margin Freed: 10.85
+SimBroker: SELL 0.01 EURUSD @ 1.07796 (spread/slip incl). PosID: 392dbb44-aa64-4a23-a5a6-ffec9a0c4eb5. Comm: 0.03
+SimBroker: Position 392dbb44-aa64-4a23-a5a6-ffec9a0c4eb5 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08004 by STOP_LOSS_HIT. P/L: -2.08. Margin Freed: 10.81
+Processing Bar 2000/2160 | Time: 2023-03-25T07:00:00+00:00 | EURUSD C: 1.08353
+SimBroker: BUY 0.01 EURUSD @ 1.08391 (spread/slip incl). PosID: 74a12a75-9fcc-4db6-bdb7-356fd35c74f3. Comm: 0.03
+SimBroker: Position 74a12a75-9fcc-4db6-bdb7-356fd35c74f3 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.08786 by TAKE_PROFIT_HIT. P/L: 3.95. Margin Freed: 10.91
+SimBroker: SELL 0.01 EURUSD @ 1.09576 (spread/slip incl). PosID: 0f77bf25-bcf9-4a92-9650-60ae0f9b2b87. Comm: 0.03
+SimBroker: Position 0f77bf25-bcf9-4a92-9650-60ae0f9b2b87 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09186 by TAKE_PROFIT_HIT. P/L: 3.90. Margin Freed: 10.96
+SimBroker: BUY 0.01 EURUSD @ 1.09634 (spread/slip incl). PosID: da37d7ee-3a6c-4ccc-8731-3f54a506872a. Comm: 0.03
+SimBroker: Position da37d7ee-3a6c-4ccc-8731-3f54a506872a (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09428 by STOP_LOSS_HIT. P/L: -2.06. Margin Freed: 10.93
+SimBroker: SELL 0.01 EURUSD @ 1.08333 (spread/slip incl). PosID: dba461d0-56fe-43dc-a051-82ce25c1568c. Comm: 0.03
+SimBroker: Position dba461d0-56fe-43dc-a051-82ce25c1568c (EURUSD SELL 0.01 lot(s)) CLOSED at 1.08542 by STOP_LOSS_HIT. P/L: -2.09. Margin Freed: 10.86
+SimBroker: BUY 0.01 EURUSD @ 1.09903 (spread/slip incl). PosID: 1087f9fe-dedb-480c-b03b-02e124c4fdb3. Comm: 0.03
+SimBroker: Position 1087f9fe-dedb-480c-b03b-02e124c4fdb3 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09699 by STOP_LOSS_HIT. P/L: -2.04. Margin Freed: 10.97
+SimBroker: SELL 0.01 EURUSD @ 1.08817 (spread/slip incl). PosID: afcb9584-c870-4f35-a841-e89fe3de8534. Comm: 0.03
+SimBroker: Position afcb9584-c870-4f35-a841-e89fe3de8534 (EURUSD SELL 0.01 lot(s)) CLOSED at 1.09027 by STOP_LOSS_HIT. P/L: -2.10. Margin Freed: 10.94
+SimBroker: BUY 0.01 EURUSD @ 1.09064 (spread/slip incl). PosID: b5492b0a-1ff7-43d6-a8b4-0da27bb548a4. Comm: 0.03
+SimBroker: Position b5492b0a-1ff7-43d6-a8b4-0da27bb548a4 (EURUSD BUY 0.01 lot(s)) CLOSED at 1.09456 by TAKE_PROFIT_HIT. P/L: 3.92. Margin Freed: 10.95
+--- Backtesting Run Finished for EURUSD ---
+Final Account Info:
+  account_id: abfc5ac2
+  balance: 10015.42
+  equity: 10015.42
+  margin: 0.0
+  free_margin: 10015.42
+  margin_level: inf
+  currency: USD
+Total equity curve points recorded: 2161
+Total trade history events in broker: 214
+
+--- Commencing Performance Calculation ---
+
+--- Calculating Performance Metrics ---
+Generating QuantStats HTML report to: dummy_strategy_backtest_EURUSD_20250612_183504.html
+Error generating QuantStats report: numpy operations are not valid with resample. Use .resample(...).sum() instead
+Make sure QuantStats and its dependencies (like IPython) are installed.
+Returns Series Head:
+ timestamp
+2022-12-31 23:59:59+00:00    0.000000
+2023-01-01 00:00:00+00:00   -0.000014
+2023-01-01 01:00:00+00:00   -0.000079
+2023-01-01 02:00:00+00:00    0.000001
+2023-01-01 03:00:00+00:00    0.000098
+Name: equity, dtype: float64
+Returns Series Tail:
+ timestamp
+2023-03-31 19:00:00+00:00    0.0
+2023-03-31 20:00:00+00:00    0.0
+2023-03-31 21:00:00+00:00    0.0
+2023-03-31 22:00:00+00:00    0.0
+2023-03-31 23:00:00+00:00    0.0
+Name: equity, dtype: float64
+Returns Series Describe:
+ count    2.161000e+03
+mean     7.154623e-07
+std      7.006129e-05
+min     -3.998931e-04
+25%      0.000000e+00
+50%      0.000000e+00
+75%      0.000000e+00
+max      4.045400e-04
+Name: equity, dtype: float64
+--- Backtest Run Script Finished ---
+Trade history events: 214
