@@ -82,19 +82,55 @@ def fetch_top_from_category(
         all_content_curr_subreddit = []
 
         with open(os.path.join(base_path, category, data_file), "rb") as f:
-            for i, line in enumerate(f):
+            for i, line_bytes in enumerate(f):
                 # skip empty lines
-                if not line.strip():
+                if not line_bytes.strip():
                     continue
 
-                parsed_line = json.loads(line)
+                # Attempt to extract created_utc and check date before full JSON parsing
+                # This is an optimization to reduce calls to json.loads()
+                # We search in the raw bytes for speed, then decode only the timestamp part.
+                try:
+                    # Regex to find "created_utc": followed by a number (integer or float)
+                    # This assumes "created_utc" is reasonably early in the JSON string.
+                    match = re.search(b'"created_utc":\\s*([0-9.]+)', line_bytes)
+                    if match:
+                        timestamp_bytes = match.group(1)
+                        timestamp = float(timestamp_bytes.decode('utf-8'))
+                        post_date_str = datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%d")
 
-                # select only lines that are from the date
-                post_date = datetime.utcfromtimestamp(
-                    parsed_line["created_utc"]
+                        if post_date_str != date:
+                            continue  # Skip this line as it's not for the target date
+                    else:
+                        # If created_utc is not found via regex (e.g., unusual formatting or not present),
+                        # we'll have to parse the whole line to be sure.
+                        # This path will be slower but ensures correctness.
+                        pass # Fall through to full parsing
+
+                except Exception:
+                    # If any error occurs during this pre-check (e.g., decoding, float conversion),
+                    # fall through to full parsing to ensure data isn't wrongly skipped.
+                    pass
+
+                # Full parsing if pre-check didn't skip or failed
+                try:
+                    line_str = line_bytes.decode('utf-8') # Decode once here
+                    parsed_line = json.loads(line_str)
+                except json.JSONDecodeError:
+                    print(f"Warning: Could not decode JSON for line in {data_file}: {line_bytes[:200]}") # Log problematic line
+                    continue # Skip malformed JSON lines
+
+                # Re-check date if not done or if pre-check failed and fell through
+                # (this check is cheap once parsed_line is available)
+                current_post_date_str = datetime.utcfromtimestamp(
+                    parsed_line.get("created_utc", 0) # Use .get for safety
                 ).strftime("%Y-%m-%d")
-                if post_date != date:
+
+                if current_post_date_str != date:
                     continue
+
+                # Store the validated post_date to avoid re-calculating later
+                post_date = current_post_date_str
 
                 # if is company_news, check that the title or the content has the company's name (query) mentioned
                 if "company" in category and query:

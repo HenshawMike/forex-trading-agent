@@ -26,3 +26,8 @@ MetaTrader5
 Flask
 Flask-CORS
 openai>=1.0
+lxml
+transformers
+torch
+nltk
+vaderSentiment

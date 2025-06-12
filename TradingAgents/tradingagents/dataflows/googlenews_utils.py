@@ -20,13 +20,17 @@ def is_rate_limited(response):
 
 @retry(
     retry=(retry_if_result(is_rate_limited)),
-    wait=wait_exponential(multiplier=1, min=4, max=60),
-    stop=stop_after_attempt(5),
+    # Increased wait times and attempts as we removed the proactive sleep
+    wait=wait_exponential(multiplier=1, min=5, max=120),
+    stop=stop_after_attempt(8),
 )
 def make_request(url, headers):
-    """Make a request with retry logic for rate limiting"""
-    # Random delay before each request to avoid detection
-    time.sleep(random.uniform(2, 6))
+    """
+    Make a request with retry logic for rate limiting.
+    The proactive random sleep has been removed to speed up requests.
+    Tenacity will handle retries with exponential backoff if rate limited.
+    """
+    # Random delay removed: time.sleep(random.uniform(2, 6))
     response = requests.get(url, headers=headers)
     return response
 
@@ -65,7 +69,8 @@ def getNewsData(query, start_date, end_date):
 
         try:
             response = make_request(url, headers)
-            soup = BeautifulSoup(response.content, "html.parser")
+            # Switched to lxml parser for better performance
+            soup = BeautifulSoup(response.content, "lxml")
             results_on_page = soup.select("div.SoaBEf")
 
             if not results_on_page:
